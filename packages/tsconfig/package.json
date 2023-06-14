@@ -1,0 +1,9 @@
+{
+  "name": "tsconfig",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "scripts": {
+    "lint": "eslint --fix",
+    "test": "echo 'No tests required for this package'"
+  }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "shared-types",
+  "version": "1.0.0",
+  "types": "types/index.d.ts",
+  "scripts": {
+    "lint": "eslint --fix",
+    "test": "echo 'No tests required for this package'"
+  }
+}

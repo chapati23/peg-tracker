@@ -1,0 +1,39 @@
+{
+  "name": "bot",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Philip Paetz <philip.paetz@me.com>",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "type": "module",
+  "packageManager": "npm@9.4.2",
+  "scripts": {
+    "build": "npx is-ci || tsc",
+    "build:watch": "tsc --watch",
+    "deploy": "../../deploy.sh bot",
+    "dev": "DEBUG=bot,alerts,curve,telegram,user,user-alerts npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start -- --port 8080'",
+    "lint": "eslint src --fix --report-unused-disable-directives",
+    "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=\"botfunction\"' --format='default(text_payload)'",
+    "scriptlint": "npx scriptlint",
+    "start": "env-cmd functions-framework --target botFunction",
+    "start:prod": "NODE_ENV=production DEBUG=bot,alerts,curve,telegram,user,user-alerts npm start -- --port 8080",
+    "test": "echo '❗️ Please add tests soon ❗️'"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^6.5.0",
+    "@google-cloud/functions-framework": "^3.2.0",
+    "alerts": "*",
+    "curve": "*",
+    "debug": "^4.3.4",
+    "telegraf": "^4.12.2",
+    "telegram": "*",
+    "user": "*",
+    "user-alerts": "*"
+  },
+  "devDependencies": {
+    "eslint-config-custom": "*",
+    "is-ci": "^3.0.1",
+    "shared-types": "*",
+    "tsconfig": "*"
+  }
+}

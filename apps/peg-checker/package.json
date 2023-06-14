@@ -1,0 +1,41 @@
+{
+  "name": "peg-checker",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Philip Paetz <philip.paetz@me.com>",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "type": "module",
+  "packageManager": "npm@9.4.2",
+  "scripts": {
+    "build": "npx is-ci || tsc",
+    "build:watch": "tsc --watch",
+    "deploy": "./deploy.sh",
+    "dev": "DEBUG=peg-checker,alerts,curve,user,user-alerts npm start -- --port 8081",
+    "lint": "eslint src --fix --report-unused-disable-directives",
+    "scriptlint": "npx scriptlint",
+    "start": "npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'env-cmd functions-framework --target pegChecker'",
+    "start:prod": "env-cmd functions-framework --target pegChecker",
+    "test": "echo '❗️ Please add tests soon ❗️'",
+    "trigger": "./trigger.local.sh",
+    "trigger:prod": "./trigger.prod.sh"
+  },
+  "overrides": {
+    "cloudevents": "^7.0.0"
+  },
+  "dependencies": {
+    "@google-cloud/firestore": "^6.5.0",
+    "@google-cloud/functions-framework": "^3.2.0",
+    "bot": "*",
+    "curve": "*",
+    "debug": "^4.3.4",
+    "telegram": "*",
+    "user": "*"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.5",
+    "eslint-config-custom": "*",
+    "is-ci": "^3.0.1",
+    "tsconfig": "*"
+  }
+}

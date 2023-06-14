@@ -1,0 +1,38 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Run Build in Watch Mode",
+      "type": "shell",
+      "command": "turbo build:watch",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "develop"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Bot in Dev Mode",
+      "type": "shell",
+      "command": "turbo dev --filter bot",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "develop"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "Run Peg Checker in Dev Mode",
+      "type": "shell",
+      "command": "turbo dev --filter peg-checker",
+      "presentation": {
+        "reveal": "always",
+        "panel": "new",
+        "group": "develop"
+      },
+      "problemMatcher": []
+    }
+  ]
+}

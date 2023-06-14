@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "pipeline": {
+    "build": {},
+    "build:watch": {},
+    "dev": { "cache": false },
+    "deploy": {},
+    "lint": {},
+    "logs": { "cache": false },
+    "pack": {},
+    "scriptlint": {},
+    "start": { "cache": false },
+    "start:prod": { "cache": false },
+    "test": { "cache": false },
+    "trigger": { "cache": false },
+    "trigger:prod": { "cache": false }
+  }
+}

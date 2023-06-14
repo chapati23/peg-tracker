@@ -1,0 +1,26 @@
+{
+  "name": "alerts",
+  "version": "1.0.0",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "build:watch": "tsc --watch",
+    "lint": "eslint src --fix --report-unused-disable-directives",
+    "pack": "npm pack",
+    "scriptlint": "npx scriptlint",
+    "test": "echo '❗️ Please add unit tests ❗️'"
+  },
+  "dependencies": {
+    "curve": "*",
+    "debug": "^4.3.4",
+    "shared-types": "*"
+  },
+  "devDependencies": {
+    "@google-cloud/firestore": "^6.5.0",
+    "eslint-config-custom": "*",
+    "tsconfig": "*"
+  }
+}

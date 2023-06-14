@@ -1,0 +1,32 @@
+{
+  "name": "curve-pool-tracker",
+  "version": "1.0.0",
+  "description": "Main workspace for curve-pool-tracker monorepo",
+  "author": "Philip Paetz <philip.paetz@me.com>",
+  "license": "UNLICENSED",
+  "volta": {
+    "node": "18.16.0"
+  },
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "createDataModel": "npx ts-node create-data-model.ts",
+    "prepare": "husky install",
+    "scriptlint": "npx scriptlint",
+    "test": "echo 'Run `turbo test` and optionally filter which package to start via `turbo start --filter bot`'"
+  },
+  "devDependencies": {
+    "@commitlint/config-conventional": "^17.6.5",
+    "@google-cloud/firestore": "^6.5.0",
+    "@types/debug": "^4.1.8",
+    "@types/node": "^20.2.5",
+    "@types/prettier": "^2",
+    "commitlint": "^17.6.5",
+    "env-cmd": "^10.1.0",
+    "husky": "^8.0.3",
+    "prettier": "^2.8.8",
+    "typescript": "^5.0.4"
+  }
+}

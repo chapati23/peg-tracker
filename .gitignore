@@ -1,0 +1,6 @@
+.env
+.turbo
+dist
+node_modules
+*.tgz
+*.bak
