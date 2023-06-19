@@ -3,6 +3,7 @@
   "pipeline": {
     "build": {},
     "build:watch": {},
+    "clean": { "cache": false },
     "dev": { "cache": false },
     "deploy": {},
     "lint": {},

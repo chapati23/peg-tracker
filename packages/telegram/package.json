@@ -8,6 +8,7 @@
   "scripts": {
     "build": "tsc",
     "build:watch": "tsc --watch",
+    "clean": "rimraf dist node_modules && rimraf *.tgz || true",
     "lint": "eslint src --fix --report-unused-disable-directives",
     "pack": "npm pack",
     "scriptlint": "npx scriptlint",
@@ -15,13 +16,14 @@
   },
   "dependencies": {
     "chalk": "^5.2.0",
-    "curve": "*",
     "cli-table3": "^0.6.3",
+    "curve": "*",
     "debug": "^4.3.4",
     "table": "^6.8.1"
   },
   "devDependencies": {
     "eslint-config-custom": "*",
+    "rimraf": "^5.0.1",
     "shared-types": "*",
     "tsconfig": "*"
   }

@@ -10,6 +10,7 @@
   "scripts": {
     "build": "npx is-ci || tsc",
     "build:watch": "tsc --watch",
+    "clean": "rimraf dist node_modules && rimraf *.tgz || true",
     "deploy": "../../deploy.sh bot",
     "dev": "DEBUG=bot,alerts,curve,telegram,user,user-alerts npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start -- --port 8080'",
     "gcp-build": "",
@@ -34,6 +35,7 @@
   "devDependencies": {
     "eslint-config-custom": "*",
     "is-ci": "^3.0.1",
+    "rimraf": "^5.0.1",
     "shared-types": "*",
     "tsconfig": "*"
   }

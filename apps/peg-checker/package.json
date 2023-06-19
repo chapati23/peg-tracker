@@ -10,6 +10,7 @@
   "scripts": {
     "build": "npx is-ci || tsc",
     "build:watch": "tsc --watch",
+    "clean": "rimraf dist node_modules && rimraf *.tgz || true",
     "deploy": "./deploy.sh",
     "dev": "DEBUG=peg-checker,alerts,curve,user,user-alerts npm start -- --port 8081",
     "lint": "eslint src --fix --report-unused-disable-directives",
@@ -36,6 +37,7 @@
     "@types/js-yaml": "^4.0.5",
     "eslint-config-custom": "*",
     "is-ci": "^3.0.1",
+    "rimraf": "^5.0.1",
     "tsconfig": "*"
   }
 }
