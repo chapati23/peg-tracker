@@ -3,6 +3,7 @@
 module.exports = {
   strict: true,
   rules: {
+    "correct-casing": false,
     "mandatory-dev": false,
     "mandatory-start": false,
     "uses-allowed-namespace": false,

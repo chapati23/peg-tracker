@@ -12,6 +12,7 @@
     "build:watch": "tsc --watch",
     "deploy": "../../deploy.sh bot",
     "dev": "DEBUG=bot,alerts,curve,telegram,user,user-alerts npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start -- --port 8080'",
+    "gcp-build": "",
     "lint": "eslint src --fix --report-unused-disable-directives",
     "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=\"botfunction\"' --format='default(text_payload)'",
     "scriptlint": "npx scriptlint",
