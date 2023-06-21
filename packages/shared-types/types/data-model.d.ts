@@ -1,3 +1,4 @@
+import { AlertSubscription } from "shared-types"
 export type User = {
   username: string
   type: "private" | "group" | "supergroup" | "channel"
@@ -17,7 +18,7 @@ export type Alert = {
 export type AlertWithId = Alert & { id: string }
 
 // Join table managing the Users <=> Alerts relationship
-export type UserAlert = {
+export type AlertSubscription = {
   userId: string
   alertId: string
   poolShareThresholdInPercent: number

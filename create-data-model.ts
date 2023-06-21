@@ -24,25 +24,25 @@ const db = new Firestore({ preferRest: true })
 async function createDataModel() {
   try {
     // Check if collections already exist
-    const usersCollection = db.collection("users")
-    const alertsCollection = db.collection("alerts")
-    const userAlertsCollection = db.collection("user-alerts")
+    const users = db.collection("users")
+    const alerts = db.collection("alerts")
+    const alertSubscriptions = db.collection("alertSubscriptions")
 
     const [
       userCollectionExists,
       alertCollectionExists,
-      userAlertsCollectionExists,
+      alertSubscriptionsCollectionExists,
     ] = await Promise.all([
-      collectionExists(usersCollection),
-      collectionExists(alertsCollection),
-      collectionExists(userAlertsCollection),
+      collectionExists(users),
+      collectionExists(alerts),
+      collectionExists(alertSubscriptions),
     ])
 
     // Prompt for confirmation if collections already exist
     if (
       userCollectionExists ||
       alertCollectionExists ||
-      userAlertsCollectionExists
+      alertSubscriptionsCollectionExists
     ) {
       const confirmation = await confirmDeleteCollections()
       if (confirmation !== "YES") {
@@ -51,12 +51,12 @@ async function createDataModel() {
       }
     }
 
-    await usersCollection.doc(USER_MOCK.id).set({
+    await users.doc(USER_MOCK.id).set({
       username: USER_MOCK.username,
       type: USER_MOCK.type,
     })
 
-    const alertDocRef = await alertsCollection.add({
+    const alertDocRef = await alerts.add({
       coin: "MIM",
       peggedTo: "USDC",
       referenceAsset: "USD",
@@ -64,7 +64,7 @@ async function createDataModel() {
     })
     const alertId = alertDocRef.id
 
-    await userAlertsCollection.add({
+    await alertSubscriptions.add({
       userId: USER_MOCK.id,
       alertId,
       poolShareThresholdInPercent: 60,
