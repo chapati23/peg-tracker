@@ -1,13 +1,13 @@
 import { AlertWithId } from "shared-types"
-import debug from "../utils/debug.js"
-import isAlert from "../utils/isAlert.js"
+import debug from "../../utils/debug.js"
+import isAlert from "../isAlert.js"
 import type { Firestore } from "@google-cloud/firestore"
 
 export default async function getAlertByCoin(
   coin: string,
   db: Firestore
 ): Promise<AlertWithId | undefined> {
-  debug(`💾 Fetching alert for ${coin} from DB...`)
+  debug(`[${coin}] 💾 Fetching alert from DB...`)
   try {
     // Check if the alert already exists for the given coin
     const querySnapshot = await db
@@ -17,7 +17,7 @@ export default async function getAlertByCoin(
 
     // Return undefined if no alert was found and leave error handling to consuming functions
     if (querySnapshot.empty) {
-      debug(`⚠️ Couldn't find alert for ${coin}`)
+      debug(`[${coin}] ⚠️  Couldn't find alert for ${coin}`)
 
       return
     }
@@ -35,7 +35,7 @@ export default async function getAlertByCoin(
       )
     }
 
-    debug("✅ Fetched alert:", alert)
+    debug(`[${coin}] ✅ Fetched alert '${alertDoc.id}':`, alert)
 
     return { id: alertDoc.id, ...alert }
   } catch (error) {

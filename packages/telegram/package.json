@@ -17,7 +17,6 @@
   "dependencies": {
     "chalk": "^5.2.0",
     "cli-table3": "^0.6.3",
-    "curve": "*",
     "debug": "^4.3.4",
     "table": "^6.8.1"
   },

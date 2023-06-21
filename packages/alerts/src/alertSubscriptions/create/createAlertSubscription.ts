@@ -1,16 +1,29 @@
-import { getOrCreateAlert } from "alerts"
-import { UserAlert } from "shared-types"
-import debug from "../utils/debug.js"
-import isUserAlert from "../utils/isUserAlert.js"
+import getOrCreateAlert from "../../alerts/create/getOrCreateAlert.js"
+import debug from "../../utils/debug.js"
+import isAlertSubscription from "../isAlertSubscription.js"
 import type { Firestore } from "@google-cloud/firestore"
+import type { AlertSubscription } from "shared-types"
 
-export default async function createAlertSubscription(
-  userId: string | undefined,
-  coin: string | undefined,
-  referenceAsset: string | undefined,
+export default async function createAlertSubscription(options: {
+  coin: string | undefined
   db: Firestore
-) {
-  debug(`💾 Creating new alert subscription for ${coin} for user ${userId}...`)
+  largestPool: string
+  lastKnownPoolShareInPercent: string
+  peggedTo: string
+  referenceAsset: string | undefined
+  userId: string | undefined
+}) {
+  const {
+    coin,
+    db,
+    largestPool,
+    lastKnownPoolShareInPercent,
+    peggedTo,
+    referenceAsset,
+    userId,
+  } = options
+
+  debug(`[${coin}] 💾 Creating new alert subscription for user ${userId}...`)
 
   if (!userId || typeof userId !== "string") {
     throw new Error("Invalid userId. Please provide a valid number.")
@@ -24,7 +37,14 @@ export default async function createAlertSubscription(
     throw new Error("Invalid referenceAsset. Please provide a valid string.")
   }
 
-  const alert = await getOrCreateAlert(coin, referenceAsset, db)
+  const alert = await getOrCreateAlert({
+    coin,
+    db,
+    largestPool,
+    lastKnownPoolShareInPercent,
+    peggedTo,
+    referenceAsset,
+  })
 
   try {
     await addAlertSubscriptionToFirestore(
@@ -35,7 +55,7 @@ export default async function createAlertSubscription(
       },
       db
     )
-    debug(`✅ Created alert subscription for ${coin} for user ${userId}`)
+    debug(`[${coin}] ✅ Created alert subscription for user ${userId}`)
   } catch (error) {
     throw new Error(
       `Failed to subscribe user ${userId} to alert ${alert.id}: ${
@@ -46,16 +66,16 @@ export default async function createAlertSubscription(
 }
 
 async function addAlertSubscriptionToFirestore(
-  alertSubscription: UserAlert,
+  alertSubscription: AlertSubscription,
   db: Firestore
 ): Promise<
   FirebaseFirestore.DocumentReference<FirebaseFirestore.DocumentData>
 > {
-  if (!isUserAlert(alertSubscription)) {
+  if (!isAlertSubscription(alertSubscription)) {
     throw new Error(
       `Couldn't add alert subscription to DB. Invalid data structure: ${alertSubscription}`
     )
   }
 
-  return await db.collection("user-alerts").add(alertSubscription)
+  return await db.collection("alertSubscriptions").add(alertSubscription)
 }

@@ -16,8 +16,7 @@
   },
   "dependencies": {
     "debug": "^4.3.4",
-    "shared-types": "*",
-    "telegram": "*"
+    "shared-types": "*"
   },
   "devDependencies": {
     "@google-cloud/firestore": "^6.5.0",

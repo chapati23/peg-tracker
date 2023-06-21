@@ -1,6 +1,6 @@
 import type { Firestore } from "@google-cloud/firestore"
 
-export default async function findAlertSubscription(
+export default async function getAlertSubscriptionByUserIdAndAlertId(
   userId: string,
   alertId: string,
   db: Firestore
@@ -9,7 +9,7 @@ export default async function findAlertSubscription(
   try {
     // Check if the alert already exists for the given coin
     querySnapshot = await db
-      .collection("user-alerts")
+      .collection("alertSubscriptions")
       .where("userId", "==", userId)
       .where("alertId", "==", alertId)
       .get()

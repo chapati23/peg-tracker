@@ -1,17 +1,17 @@
-import debug from "../utils/debug.js"
+import debug from "../../utils/debug.js"
 import type { Firestore } from "@google-cloud/firestore"
-import type { Alert } from "shared-types"
+import type { AlertWithId } from "shared-types"
 
 export default async function getAlertById(
   alertId: string,
   db: Firestore
-): Promise<Alert | null> {
+): Promise<AlertWithId | null> {
   try {
     debug(`📡 Fetching alert ${alertId} from DB...`)
     const alertDoc = await db.doc(`alerts/${alertId}`).get()
 
     if (alertDoc.exists) {
-      const alert = alertDoc.data() as Alert
+      const alert = alertDoc.data() as AlertWithId
       debug(`✅ Found alert: ${JSON.stringify(alert)}`)
       return alert
     } else {

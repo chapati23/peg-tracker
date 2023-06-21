@@ -1,4 +1,4 @@
-import debug from "./utils/debug.js"
+import debug from "../utils/debug.js"
 import type {
   Firestore,
   DocumentReference,

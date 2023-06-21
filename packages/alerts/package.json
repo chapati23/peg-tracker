@@ -15,7 +15,6 @@
     "test": "echo '❗️ Please add unit tests ❗️'"
   },
   "dependencies": {
-    "curve": "*",
     "debug": "^4.3.4",
     "shared-types": "*"
   },

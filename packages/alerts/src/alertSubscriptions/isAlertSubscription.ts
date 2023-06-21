@@ -1,6 +1,6 @@
-import type { UserAlert } from "shared-types"
+import type { AlertSubscription } from "shared-types"
 
-export default function isAlert(obj: unknown): obj is UserAlert {
+export default function isAlert(obj: unknown): obj is AlertSubscription {
   if (typeof obj !== "object" || obj === null) {
     return false
   }

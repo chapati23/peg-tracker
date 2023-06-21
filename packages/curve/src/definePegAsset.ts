@@ -1,4 +1,15 @@
+const validReferenceAssets = ["USD", "EUR", "BTC", "ETH", "CRYPTO"]
 export default function definePegAsset(referenceAsset: string) {
+  if (!validReferenceAssets.includes(referenceAsset)) {
+    throw new Error(
+      `[${
+        definePegAsset.name
+      }] You passed an invalid reference asset: ${referenceAsset}\nSupported reference assets are: ${validReferenceAssets.join(
+        ", "
+      )}`
+    )
+  }
+
   let peggedTo
 
   switch (referenceAsset) {

@@ -1,7 +1,6 @@
-import getAlertsForUser from "./getAlertsForUser.js"
-import getAllUsers from "./getAllUsers.js"
-import getOrCreateUser from "./getOrCreateUser.js"
-import getUser from "./getUser.js"
+import createUser from "./create/createUser.js"
 import isUser from "./isUser.js"
+import getAllUsers from "./read/getAllUsers.js"
+import getUserById from "./read/getUserById.js"
 
-export { getUser, getOrCreateUser, isUser, getAllUsers, getAlertsForUser }
+export { createUser, getUserById, getAllUsers, isUser }
