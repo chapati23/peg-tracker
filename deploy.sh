@@ -18,9 +18,9 @@ memory="512MiB"
 region="europe-west1"
 runtime="nodejs18"
 secrets="INFURA_API_KEY=INFURA_API_KEY:latest,TELEGRAM_BOT_TOKEN=TELEGRAM_BOT_TOKEN:latest"
-timeout="540"
+timeout="120"
 ingress_settings="all"
-debug_packages="alerts,curve,telegram,user-alerts"
+debug_packages="alerts,curve,telegram,user"
 
 # Extract the function name from the command-line argument
 repo_name=$1
@@ -32,7 +32,7 @@ if [[ "$repo_name" == "bot" ]]; then
   auth="--allow-unauthenticated"
   webhook_url=$(grep -w "PROD_WEBHOOK_URL" .env | cut -d '=' -f2-)
   # ^|^ changes the argument's delimiter from ',' to '|' because the DEBUG env var itself is comma-delimited
-  env_vars="--set-env-vars=^|^PROD_WEBHOOK_URL=$webhook_url|DEBUG=bot,$debug_packages"
+  env_vars="--set-env-vars=^|^PROD_WEBHOOK_URL=$webhook_url|DEBUG=bot,$debug_packages|DEBUG_HIDE_DATE=true"
 elif [[ "$repo_name" == "peg-checker" ]]; then
   trigger="--trigger-topic=cron-trigger"
   function_name="pegChecker"
@@ -49,7 +49,7 @@ if turbo build --force >/dev/null 2>&1; then
   echo "✅ 'turbo build' successful"
   printf "\n"
 else
-  echo "❌ 'npm pack' failed"
+  echo "❌ 'turbo build' failed"
   exit 1
 fi
 
@@ -57,7 +57,7 @@ fi
 # at runtime (because we're not uploading the entire monorepo to Google Cloud Functions, only this function)"
 echo "️⏳ Running 'turbo pack' on all packages..."
 cd ../..
-if turbo pack >/dev/null 2>&1; then
+if turbo pack --force >/dev/null 2>&1; then
   echo "✅ 'turbo pack' successful"
   printf "\n"
 else
@@ -96,7 +96,8 @@ echo "✅ Copied all package tarballs into this folder"
 printf "\n"
 
 echo "🌀 Deploying to Google Cloud..."
-if gcloud functions deploy $function_name \
+
+deploy_result="$(gcloud functions deploy $function_name \
   --entry-point=$function_name \
   --gen2 \
   --memory="$memory" \
@@ -107,10 +108,28 @@ if gcloud functions deploy $function_name \
   --ingress-settings=$ingress_settings \
   $trigger \
   $auth \
-  "$env_vars"; then
+  "$env_vars")"
+
+exit_code=$?
+
+if [ $exit_code -eq 0 ]; then
+  echo "$deploy_result"
   printf "\n✅ Successfully deployed function '%s'\n\n" "$function_name"
+
+  # Usually the cloud function URL should always be the same, but it can happen
+  # that the format changes (as it did i.e. when gen2 functions went from alpha
+  # to general availability)
+  echo "⏳ Storing cloud function URL from deploy output and storing it in .env..."
+  url=$(echo "$deploy_result" | grep "url" | awk '{print $2}')
+
+  if awk -v url="$url" '/^PROD_WEBHOOK_URL=/{sub(/=.*/, "=" url)}1' ".env" >temp && mv temp "$.env"; then
+    echo "✅ Stored current cloud function URL in .env"
+    printf "\n"
+  else
+    echo "❌ Failed to store current cloud function URL in .env"
+  fi
 else
-  printf "\n❌ Deployment failed\n\n"
+  printf "\n❌ Deployment failed with exit code %s\n\n" "$exit_code"
 fi
 
 # Restore original package.json
@@ -123,3 +142,12 @@ else
   echo "❌ Failed to restore original package.json"
   exit 1
 fi
+
+# Remove all tarballs created by 'npm pack'
+echo "⏳ Cleaning up tarballs created by 'npm pack'..."
+if find ../../packages/*/ -name "*.tgz" -type f -delete; then
+  echo "✅ Cleaned up tarballs from packages folders"
+else
+  echo "❌ Failed to clean up tarballs from packages folders"
+fi
+printf "\n"
