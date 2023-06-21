@@ -12,11 +12,11 @@
     "build:watch": "tsc --watch",
     "clean": "rimraf dist node_modules && rimraf *.tgz || true",
     "deploy": "./deploy.sh",
-    "dev": "DEBUG=peg-checker,alerts,curve,user,user-alerts npm start -- --port 8081",
+    "dev": "npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start'",
     "lint": "eslint src --fix --report-unused-disable-directives",
     "scriptlint": "npx scriptlint",
-    "start": "npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'env-cmd functions-framework --target pegChecker'",
-    "start:prod": "env-cmd functions-framework --target pegChecker",
+    "start": "DEBUG=peg-checker,alerts,curve,user DEBUG_COLORS=true env-cmd functions-framework --target pegChecker --port 8081",
+    "start:prod": "NODE_ENV=production env-cmd functions-framework --target pegChecker",
     "test": "echo '❗️ Please add tests soon ❗️'",
     "trigger": "./trigger.local.sh",
     "trigger:prod": "./trigger.prod.sh"
@@ -27,6 +27,7 @@
   "dependencies": {
     "@google-cloud/firestore": "^6.5.0",
     "@google-cloud/functions-framework": "^3.2.0",
+    "alerts": "^1.0.0",
     "bot": "*",
     "curve": "*",
     "debug": "^4.3.4",

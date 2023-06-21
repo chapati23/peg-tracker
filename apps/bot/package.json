@@ -12,14 +12,18 @@
     "build:watch": "tsc --watch",
     "clean": "rimraf dist node_modules && rimraf *.tgz || true",
     "deploy": "../../deploy.sh bot",
-    "dev": "DEBUG=bot,alerts,curve,telegram,user,user-alerts npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start -- --port 8080'",
+    "dev": "npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start -- --port 8080'",
     "gcp-build": "",
+    "gcp:firestore": "open https://console.cloud.google.com/firestore/databases/-default-",
+    "gcp:function": "open https://console.cloud.google.com/functions/details/europe-west1/botFunction",
     "lint": "eslint src --fix --report-unused-disable-directives",
-    "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=\"botfunction\"' --format='default(text_payload)'",
+    "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=botfunction' --format 'csv[separator=\" \"](timestamp,text_payload)'",
     "scriptlint": "npx scriptlint",
-    "start": "env-cmd functions-framework --target botFunction",
-    "start:prod": "NODE_ENV=production DEBUG=bot,alerts,curve,telegram,user,user-alerts npm start -- --port 8080",
-    "test": "echo '❗️ Please add tests soon ❗️'"
+    "start": "DEBUG=telegraf:main,bot,alerts,curve,telegram,user DEBUG_COLORS=true env-cmd functions-framework --target botFunction; npm run webhook:set",
+    "start:prod": "NODE_ENV=production  npm start -- --port 8080",
+    "test": "echo '❗️ Please add tests soon ❗️'",
+    "webhook:get": "source .env && curl -s https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/getWebhookInfo | jq",
+    "webhook:set": "source .env && curl -s https://api.telegram.org/bot$TELEGRAM_BOT_TOKEN/setWebhook?url=$PROD_WEBHOOK_URL | jq"
   },
   "dependencies": {
     "@google-cloud/firestore": "^6.5.0",
@@ -29,8 +33,7 @@
     "debug": "^4.3.4",
     "telegraf": "^4.12.2",
     "telegram": "*",
-    "user": "*",
-    "user-alerts": "*"
+    "user": "*"
   },
   "devDependencies": {
     "eslint-config-custom": "*",
