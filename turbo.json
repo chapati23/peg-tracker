@@ -1,8 +1,25 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
+    // APPS
+    "bot#build": {
+      "dependsOn": [
+        "alerts#build",
+        "curve#build",
+        "telegram#build",
+        "user#build"
+      ]
+    },
+    "peg-checker#build": {
+      "dependsOn": [
+        "alerts#build",
+        "curve#build",
+        "telegram#build",
+        "user#build"
+      ]
+    },
     "build": {},
-    "build:watch": {},
+    "build:watch": { "cache": false },
     "clean": { "cache": false },
     "dev": { "cache": false },
     "deploy": {},

@@ -1,5 +1,6 @@
 import { getAlertByCoin } from "alerts"
-import { sendDepegRiskResults } from "telegram"
+import { findLargestPoolForCoin, calculateSellPressureToDepeg } from "curve"
+import { sendPriceImpactResults } from "telegram"
 import { db } from "../index.js"
 import debug from "../utils/debug.js"
 import getCoinFromCommand from "../utils/getCoinFromCommand.js"
@@ -28,7 +29,17 @@ export default async function checkAlert(ctx: CustomContext) {
       throw new Error(`Couldn't find alert for ${coin} in DB`)
     }
 
-    await sendDepegRiskResults(userId, alert)
+    const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
+    const totalPoolLiquidity = await pool.stats
+      .totalLiquidity()
+      .then((totalLiquidity) => parseInt(totalLiquidity))
+    const priceImpactResults = await calculateSellPressureToDepeg(
+      alert.coin,
+      alert.peggedTo,
+      totalPoolLiquidity
+    )
+
+    await sendPriceImpactResults({ alert, priceImpactResults, userId })
   } catch (error) {
     debug(`❌ Checking depeg risk for ${coin} failed:`, error)
     await ctx.reply(

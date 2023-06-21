@@ -1,5 +1,5 @@
 import debug from "../utils/debug.js"
-import isCallback from "../utils/isCallbackMessage.js"
+import isCallback from "../utils/isCallback.js"
 import isTextMessage from "../utils/isTextMessage.js"
 import type { Context } from "telegraf"
 import type {
@@ -16,7 +16,7 @@ export default async function isAcceptedMessageTypeMiddleware<
     wizard: WizardContextWizard<TContext>
   }
 >(ctx: TContext, next: () => Promise<void>) {
-  debug("[Middleware::isTextMessage::START")
+  debug("[Middleware :: isTextMessage :: START")
   if (!isTextMessage(ctx.message) && !isCallback(ctx.update)) {
     debug(
       "User didn't reply with accepted message type, re-running same wizard step",
@@ -27,7 +27,7 @@ export default async function isAcceptedMessageTypeMiddleware<
     )
     ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step
   } else {
-    debug("[Middleware::isTextMessage::END")
+    debug("[Middleware :: isTextMessage :: END")
     await next() // Continue to the next step or middleware
   }
 }

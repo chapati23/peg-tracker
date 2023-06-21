@@ -1,8 +1,14 @@
 import { Firestore } from "@google-cloud/firestore"
 import { cloudEvent } from "@google-cloud/functions-framework"
-import { initCurveApi, findLargestPoolForCoin, getCoinShareOfPool } from "curve"
-import { sendDepegRiskResults } from "telegram"
-import { getAlertsForUser, getAllUsers } from "user"
+import { getAlertById, getAlertSubscriptionsByUserId } from "alerts"
+import {
+  initCurveApi,
+  findLargestPoolForCoin,
+  getCoinShareOfPool,
+  calculateSellPressureToDepeg,
+} from "curve"
+import { sendPriceImpactResults } from "telegram"
+import { getAllUsers } from "user"
 import debug from "./utils/debug.js"
 
 const db = new Firestore({ preferRest: true })
@@ -35,14 +41,22 @@ cloudEvent("pegChecker", async (/*cloudEvent*/) => {
       const user = await userRef.get().then((u) => u.data())
       debug(`[${userRef.id}] USER:`, user)
 
-      const alerts = await getAlertsForUser(userRef.id, db)
-      debug(
-        `[${userRef.id}] ALERTS:`,
-        alerts.map((alert) => alert.coin)
+      const alertSubscriptions = await getAlertSubscriptionsByUserId(
+        userRef.id,
+        db
       )
 
+      if (!alertSubscriptions) {
+        return `No alert subscriptions found for user ${user}`
+      }
+
+      debug(`[${userRef.id}] Alert Subscriptions:`, alertSubscriptions)
+
       // 3. Process every alert
-      for (const alert of alerts) {
+      for (const sub of alertSubscriptions) {
+        const alert = await getAlertById(sub.alertId, db)
+        if (!alert) throw new Error(`Alert for ${sub.alertId} was null`)
+
         debug(`[${alert.coin}] Begin check...`)
         const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
         const lastKnownPoolShareInPercent = alert.lastKnownPoolShareInPercent
@@ -65,7 +79,20 @@ cloudEvent("pegChecker", async (/*cloudEvent*/) => {
           currentPoolShareInPercent < parseFloat(lastKnownPoolShareInPercent)
         ) {
           debug(`[${alert.coin}] Trigger alert!`)
-          await sendDepegRiskResults(userRef.id, alert, pool)
+          const totalPoolLiquidity = await pool.stats
+            .totalLiquidity()
+            .then((totalLiquidity) => parseInt(totalLiquidity))
+          const priceImpactResults = await calculateSellPressureToDepeg(
+            alert.coin,
+            alert.peggedTo,
+            totalPoolLiquidity
+          )
+
+          await sendPriceImpactResults({
+            alert,
+            priceImpactResults,
+            userId: userRef.id,
+          })
 
           debug(
             `[${alert.coin}] Update last known pool share of ${alert.coin} in DB`

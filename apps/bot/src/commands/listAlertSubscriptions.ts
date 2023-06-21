@@ -1,22 +1,15 @@
-import { getAlertById } from "alerts"
+import { getAlertSubscriptionsByUserId, getAlertById } from "alerts"
 import { Alert } from "shared-types"
 import { escapeMarkdown } from "telegram"
-import { findAlertSubscriptionsByUserId } from "user-alerts"
 import { db } from "../index.js"
 import debug from "../utils/debug.js"
+import getCurrencyEmoji from "../utils/getCurrencyEmoji.js"
 import isTextMessage from "../utils/isTextMessage.js"
 import type { CustomContext } from "../types.js"
 
-const currencySymbolMap: { [key: string]: string } = {
-  EUR: "💶",
-  USD: "💵",
-  YEN: "💴",
-  GBP: "💷",
-}
-
 export default async function listAlertsSubscriptions(ctx: CustomContext) {
   await ctx.sendChatAction("typing")
-  await ctx.reply("Loading your alerts...")
+  await ctx.reply("⏳ Loading your alerts...")
 
   if (!isTextMessage(ctx.message)) {
     throw new Error(
@@ -24,10 +17,10 @@ export default async function listAlertsSubscriptions(ctx: CustomContext) {
     )
   }
 
-  let userAlerts
+  let alertSubscriptions
 
   try {
-    userAlerts = await findAlertSubscriptionsByUserId(
+    alertSubscriptions = await getAlertSubscriptionsByUserId(
       ctx.message.from.id.toString(),
       db
     )
@@ -45,14 +38,16 @@ export default async function listAlertsSubscriptions(ctx: CustomContext) {
     return
   }
 
-  if (!userAlerts) {
+  if (!alertSubscriptions) {
     await ctx.replyWithMarkdownV2(
       escapeMarkdown(
         "You don't have any alerts set up yet.\n\nCreate your first one with */add*"
       )
     )
   } else {
-    const alertPromises = userAlerts.map((sub) => getAlertById(sub.alertId, db))
+    const alertPromises = alertSubscriptions.map((sub) =>
+      getAlertById(sub.alertId, db)
+    )
     const alerts = (await Promise.all(alertPromises)).filter(
       (alert) => alert !== null
     ) as Alert[] // Typecast: We're explicitly filtering out null results so this should be safe to typecast
@@ -61,18 +56,16 @@ export default async function listAlertsSubscriptions(ctx: CustomContext) {
       .map((alert) => {
         const { coin, referenceAsset } = alert
         const referenceAssetSymbol =
-          // Should be safe because referenceAsset is not user input
-          // eslint-disable-next-line security/detect-object-injection
-          currencySymbolMap[referenceAsset] || `pegged to ${referenceAsset}`
+          getCurrencyEmoji(referenceAsset) || referenceAsset
         const coinPadding = coin.length === 3 ? "  " : ""
 
-        return `- ${referenceAssetSymbol} ${coin}${coinPadding}   |  /check_${coin}${coinPadding} 👀  |  /delete_${coin}${coinPadding} ❌`
+        return `- ${referenceAssetSymbol} ${coin}${coinPadding}   |  /check\\_${coin}${coinPadding} 👀  |  /delete\\_${coin}${coinPadding} ❌`
       })
       .sort()
       .join("\n")
 
-    await ctx.reply(
-      `You're tracking the pegs of the following tokens:\n${response}`
+    await ctx.replyWithMarkdownV2(
+      escapeMarkdown(`*Your Peg Alerts*\n\n${response}`)
     )
   }
 }

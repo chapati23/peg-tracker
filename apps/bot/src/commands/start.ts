@@ -1,4 +1,5 @@
-import { getOrCreateUser } from "user"
+import { getChat } from "telegram"
+import { createUser, getUserById } from "user"
 import { db } from "../index.js"
 import isTextMessage from "../utils/isTextMessage.js"
 import type { CustomContext } from "../types.js"
@@ -13,9 +14,22 @@ export default async function start(ctx: CustomContext) {
   // Greet User
   const userName = ctx.message.from.username
   const userId = ctx.message.from.id
-  ctx.reply(`Let's go, ${userName}!`)
+  ctx.reply(`Hi ${userName}!`)
 
   // Get user info
-  const user = await getOrCreateUser(userId, db)
-  ctx.reply(`User Info: ${user.username}`)
+  const user = await getUserById(userId, db)
+
+  if (user) {
+    ctx.reply(`Your Account: ${user.username} [${user.type}]`)
+  } else {
+    ctx.reply("⏳ Creating a new account for you...")
+
+    try {
+      const chat = await getChat(userId)
+      await createUser(userId, chat, db)
+      ctx.reply("✅ Account created! Now add some peg alerts via /add COIN")
+    } catch (error) {
+      ctx.reply("❌ Failed to create user account. Internal Server Error.")
+    }
+  }
 }

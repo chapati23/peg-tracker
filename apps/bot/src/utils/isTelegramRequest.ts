@@ -1,6 +1,6 @@
 import { IncomingMessage } from "http"
 import type { Request } from "@google-cloud/functions-framework"
-import type { Update } from "telegraf/types"
+import type { Update, Message, CallbackQuery } from "telegraf/types"
 
 export default function isTelegramRequest(
   req: unknown
@@ -11,24 +11,33 @@ export default function isTelegramRequest(
 
   const { body } = req
 
-  if (body === null || typeof body !== "object" || !("message" in body)) {
+  if (typeof body !== "object" || body === null) {
     return false
   }
 
-  const message = body.message
-
-  // For readability, the verbose version is actually better than a one-liner return
-  // eslint-disable-next-line sonarjs/prefer-single-boolean-return
-  if (
-    !message ||
-    typeof message !== "object" ||
-    !("message_id" in message) ||
-    !("from" in message) ||
-    !("chat" in message) ||
-    !("date" in message)
-  ) {
-    return false
+  if ("message" in body) {
+    const message = body.message as Message
+    return (
+      typeof message === "object" &&
+      message !== null &&
+      "message_id" in message &&
+      "from" in message &&
+      "chat" in message &&
+      "date" in message
+    )
   }
 
-  return true
+  if ("callback_query" in body) {
+    const callbackQuery = body.callback_query as CallbackQuery
+    return (
+      typeof callbackQuery === "object" &&
+      callbackQuery !== null &&
+      "id" in callbackQuery &&
+      "from" in callbackQuery &&
+      "message" in callbackQuery &&
+      "chat_instance" in callbackQuery
+    )
+  }
+
+  return false
 }

@@ -12,10 +12,13 @@ import listAlertsSubscriptions from "./commands/listAlertSubscriptions.js"
 import showSupportedCoins from "./commands/showSupportedCoins.js"
 import start from "./commands/start.js"
 import debug from "./utils/debug.js"
+import isCallback from "./utils/isCallback.js"
 import isTelegramRequest from "./utils/isTelegramRequest.js"
 import type { CustomContext } from "./types.js"
 
-setLogFunction(debug)
+if (process.env["DEBUG"] && process.env["DEBUG"].includes("firestore")) {
+  setLogFunction(debug)
+}
 
 if (
   process.env["TELEGRAM_BOT_TOKEN"] == null ||
@@ -52,45 +55,45 @@ bot.use(stage.middleware())
 /* COMMANDS */
 /************/
 bot.start(async (ctx) => {
-  debug("[Start::START]")
+  debug("[Start :: START]")
   await start(ctx)
-  debug("[Start::END]")
+  debug("[Start :: END]")
 })
 
 bot.help(async (ctx) => {
-  debug("[Help::START]")
+  debug("[Help :: START]")
   await help(ctx)
-  debug("[Help::END]")
+  debug("[Help :: END]")
 })
 
-bot.command("add", async (ctx) => {
-  debug("[AddAlert::START]")
+bot.command(/\badd/i, async (ctx) => {
+  debug("[AddAlert :: START]")
   await addAlert(ctx)
-  debug("[AddAlert::END]")
+  debug("[AddAlert :: END]")
 })
 
-bot.command("list", async (ctx) => {
-  debug("[ListAlerts::START]")
+bot.command(/\blist/i, async (ctx) => {
+  debug("[ListAlerts :: START]")
   await listAlertsSubscriptions(ctx)
-  debug("[ListAlerts::END]")
+  debug("[ListAlerts :: END]")
 })
 
-bot.command(/check_(\w+)/, async (ctx) => {
-  debug("[CheckAlert::START]")
+bot.command(/\bcheck_(\w+)/i, async (ctx) => {
+  debug("[CheckAlert :: START]")
   await checkAlert(ctx)
-  debug("[CheckAlert::END]")
+  debug("[CheckAlert :: END]")
 })
 
-bot.command("coins", async (ctx) => {
-  debug("[Coins::START]")
+bot.command(/\bcoins/i, async (ctx) => {
+  debug("[Coins :: START]")
   await showSupportedCoins(ctx)
-  debug("[Coins::END]")
+  debug("[Coins :: END]")
 })
 
-bot.command(/delete_(\w+)/, async (ctx) => {
-  debug("[DeleteAlert::START]")
+bot.command(/\bdelete_(\w+)/i, async (ctx) => {
+  debug("[DeleteAlert :: START]")
   await deleteAlertSubscription(ctx)
-  debug("[DeleteAlert::END]")
+  debug("[DeleteAlert :: END]")
 })
 
 if (process.env["NODE_ENV"] === "production") {
@@ -102,10 +105,10 @@ if (process.env["NODE_ENV"] === "production") {
       `Env var PROD_WEBHOOK_URL is invalid or null: ${webhookUrl}`
     )
   }
-
   bot.launch({
     webhook: {
       domain: webhookUrl,
+      hookPath: "/botFunction/telegraf/" + bot.secretPathComponent(),
     },
   })
   debug("✅ Bot launched successfully")
@@ -113,9 +116,18 @@ if (process.env["NODE_ENV"] === "production") {
 } else {
   debug("Launching development bot with long polling...")
   // In development, use polling instead of webhooks because most local dev envs aren't accessible from the internet
-   
-  await bot.launch()
+
+  bot.launch()
 }
+
+// Graceful shutdown
+process.once("SIGINT", () => {
+  bot.stop("SIGINT")
+})
+
+process.once("SIGTERM", () => {
+  bot.stop("SIGTERM")
+})
 
 await initCurveApi()
 
@@ -131,17 +143,28 @@ export default http("botFunction", async (req, res) => {
     )
     res.sendStatus(500)
   }
-  debug(
-    "🆕 New request\n",
-    `Text: ${req.body.message.text}\n`,
-    `From: ${JSON.stringify(req.body.message.from)}\n`,
-    `Update ID: ${req.body.update_id}\n`
-  )
+
+  if (isCallback(req.body.update)) {
+    debug(
+      "🆕 New request\n",
+      `[${req.body.update_id}] Query: ${req.body.callback_query}\n`
+    )
+  } else {
+    debug(
+      "🆕 New request\n",
+      `[${req.body.update_id}] Text: ${req.body.message?.text}\n`,
+      `[${req.body.update_id}] From: ${JSON.stringify(
+        req.body.message?.from
+      )}\n`
+    )
+  }
 
   try {
     await bot.handleUpdate(req.body)
-  } finally {
     debug("🏁 Request served successfully")
     res.sendStatus(200)
+  } catch (error) {
+    debug("❌ Error while serving request:", error)
+    res.sendStatus(500)
   }
 })

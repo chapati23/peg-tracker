@@ -1,6 +1,9 @@
-import { getAlertByCoin } from "alerts"
+import {
+  deleteAlertSubscriptionById,
+  getAlertSubscriptionByUserIdAndAlertId,
+  getAlertByCoin,
+} from "alerts"
 import { escapeMarkdown } from "telegram"
-import { deleteAlertSubscriptionById, findAlertSubscription } from "user-alerts"
 import { db } from "../index.js"
 import debug from "../utils/debug.js"
 import getCoinFromCommand from "../utils/getCoinFromCommand.js"
@@ -17,11 +20,11 @@ export default async function deleteAlertSubscription(ctx: CustomContext) {
   }
 
   const userId = ctx.message.from.id.toString()
-  const coin = getCoinFromCommand(ctx)
-  ctx.replyWithMarkdownV2(escapeMarkdown(`Deleting *${coin}* alert...`))
+  const coin = getCoinFromCommand(ctx).toUpperCase()
+  ctx.replyWithMarkdownV2(escapeMarkdown(`⏳ Deleting *${coin}* alert...`))
 
   try {
-    debug(`🗑️ Deleting ${coin} alert subscription for user ${userId}`)
+    debug(`[${coin}] 🗑️  Deleting alert subscription for user ${userId}`)
 
     const alert = await getAlertByCoin(coin, db)
 
@@ -29,11 +32,15 @@ export default async function deleteAlertSubscription(ctx: CustomContext) {
       throw new Error(`Couldn't find alert for ${coin} in DB`)
     }
 
-    const alertSubscription = await findAlertSubscription(userId, alert.id, db)
+    const alertSubscription = await getAlertSubscriptionByUserIdAndAlertId(
+      userId,
+      alert.id,
+      db
+    )
 
     if (!alertSubscription) {
       debug(
-        `No alert subscription found for alert ID '${alert.id}' and user ID '${userId}'. User might have already deleted it in the past.`
+        `[${coin}] No alert subscription found for alert ID '${alert.id}' and user ID '${userId}'. User might have already deleted it in the past.`
       )
       await ctx.replyWithMarkdownV2(
         escapeMarkdown(
@@ -43,16 +50,15 @@ export default async function deleteAlertSubscription(ctx: CustomContext) {
     } else {
       await deleteAlertSubscriptionById(alertSubscription.id, db)
       await ctx.replyWithMarkdownV2(
-        escapeMarkdown(`✅ Deleted alert for *${coin}*`)
+        escapeMarkdown(`✅ Deleted *${coin}* alert`)
       )
     }
   } catch (error) {
-    debug("❌ Deleting alert failed:", error)
+    debug(`[${coin}] ❌ Deleting alert failed:`, error)
     await ctx.replyWithMarkdownV2(
-      escapeMarkdown(`❌ Couldn't delete alert because of an unexpected error`)
-    )
-    await ctx.reply(
-      `❌ Couldn't delete alert ${coin} because of an unexpected error`
+      escapeMarkdown(
+        `❌ Couldn't delete *${coin}* alert because of an unexpected error`
+      )
     )
   }
 }

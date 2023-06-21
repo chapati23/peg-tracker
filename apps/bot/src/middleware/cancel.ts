@@ -8,7 +8,7 @@ export default async function cancelMiddleware(
   ctx: CustomContext,
   next: () => Promise<void>
 ) {
-  debug("[Middleware::Cancel::START]")
+  debug("[Middleware :: Cancel :: START]")
 
   if (isTextMessage(ctx.message)) {
     const userInputWithoutSlash = ctx.message.text
@@ -22,6 +22,6 @@ export default async function cancelMiddleware(
     }
   }
 
-  debug("[Middleware::Cancel::END]")
+  debug("[Middleware :: Cancel :: END]")
   await next() // Continue to the next step or middleware
 }

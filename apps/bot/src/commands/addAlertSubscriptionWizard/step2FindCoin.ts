@@ -1,16 +1,24 @@
-import { getPoolsForCoin, getReferenceAsset, getSupportedCoins } from "curve"
+import { createAlertSubscription, alertSubscriptionExists } from "alerts"
+import {
+  definePegAsset,
+  findLargestPoolForCoin,
+  getCoinShareOfPool,
+  getPoolsForCoin,
+  getReferenceAsset,
+  getSupportedCoins,
+} from "curve"
 import { Markup } from "telegraf"
 import { escapeMarkdown } from "telegram"
-import { createAlertSubscription, alertSubscriptionExists } from "user-alerts"
 import { db } from "../../index.js"
 import debug from "../../utils/debug.js"
+import getCurrencyEmoji from "../../utils/getCurrencyEmoji.js"
 import isTextMessage from "../../utils/isTextMessage.js"
 import { supportedCommands } from "../help.js"
 import type { CustomContext } from "../../types.js"
 import type { Message } from "telegraf/types"
 
 export default async function step2FindCoin(ctx: CustomContext) {
-  debug("[AddAlert::Step 2::Find Coin]")
+  debug("[AddAlert :: Step 2 :: Find Coin]")
 
   if (!isTextMessage(ctx.message)) {
     throw new Error(
@@ -36,85 +44,97 @@ export default async function step2FindCoin(ctx: CustomContext) {
   // Store coin in session so it's accessible by the next wizard steps
   ctx.session.coin = coin
 
-  if (!getSupportedCoins().includes(coin.toLowerCase())) {
+  if (!(await getSupportedCoins()).includes(coin.toLowerCase())) {
     ctx.replyWithMarkdownV2(
       escapeMarkdown(
         `Sorry, *${coin}* is not supported.\n\nYou can view a list of all supported coins with */coins*`
       )
     )
     return ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step to allow user to enter supported coin
-  } else {
-    await ctx.replyWithMarkdownV2(
-      escapeMarkdown(`Setting up a new peg alert for *${coin}*...`)
+  }
+
+  if (await alertSubscriptionExists(ctx.session.userId, coin, db)) {
+    ctx.replyWithMarkdownV2(
+      escapeMarkdown(
+        `ℹ️ You already have an alert set up for *${coin}*. You're all set.`
+      )
     )
-
-    if (
-      await alertSubscriptionExists(ctx.session.userId.toString(), coin, db)
-    ) {
-      ctx.replyWithMarkdownV2(
-        escapeMarkdown(
-          `ℹ️ You already have an alert set up for *${coin}*. You're all set.`
-        )
-      )
-
-      return await ctx.scene.leave()
-    }
-
-    const pools = getPoolsForCoin(coin)
-    if (!pools || pools.length === 0) {
-      // NOTE: We should never land in here. Still better to explicitly handle worst case scenario than crashing
-      debug(
-        `❌ No curve pools found for ${coin}. This should never happen because we're checking if the entered coin is in the supported coins list earlier 🤔`
-      )
-      await ctx.reply(`❌ No curve pools found for ${coin}`)
-      return ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step to allow user to enter supported coin
-    }
-
-    const referenceAsset = getReferenceAsset(coin, pools)
-    if (typeof referenceAsset === "string") {
-      await createAlertSubscription(
-        ctx.session.userId.toString(),
-        coin,
-        referenceAsset,
-        db
-      )
-      await ctx.replyWithMarkdownV2(
-        escapeMarkdown(
-          `✅ Set up new peg alert for *${coin}* (tracking ${referenceAsset})`
-        )
-      )
-    } else if (typeof referenceAsset === "object") {
-      /* If multiple reference assets are found, let the user pick the right one.
-       * This can happen in the rare case when there's an equal no. of stableswap
-       * as well as crypto pools containing the asset. For example, if there was 1 [FRAX/USDC]
-       * pool with USD as the reference asset, and 1 [FRAX/ETH] pool with CRYPTO as the
-       * reference asset.
-       */
-      const referenceAssets = Object.keys(referenceAsset)
-      const referenceAssetsNumberedList = referenceAssets
-        .map((item, index) => `${index + 1}. ${item}`)
-        .join("\n")
-      debug("Reference assets:", referenceAssets)
-
-      const buttons = Markup.inlineKeyboard([
-        referenceAssets.map((option) => Markup.button.callback(option, option)),
-      ])
-      await ctx.replyWithMarkdownV2(
-        escapeMarkdown(
-          `*Which coin should act as the peg reference for ${coin}?*\n\n${referenceAssetsNumberedList}\n\n_💡 FYI: For most coins we can determine the right peg automatically. But for smaller coins that have multiple pools on Curve this isn't always possible._`
-        ),
-        buttons
-      )
-
-      return ctx.wizard.next()
-    } else {
-      throw new Error(
-        `❌ Unable to determine reference asset for ${coin}. Reference asset is ${referenceAsset}`
-      )
-    }
 
     return await ctx.scene.leave()
   }
+
+  await ctx.replyWithMarkdownV2(
+    escapeMarkdown(`⏳ Setting up peg alert for *${coin}*...`)
+  )
+
+  const pools = getPoolsForCoin(coin)
+  if (!pools || pools.length === 0) {
+    // NOTE: We should never land in here. Still better to explicitly handle worst case scenario than crashing
+    debug(
+      `❌ No curve pools found for ${coin}. This should never happen because we're checking if the entered coin is in the supported coins list earlier 🤔`
+    )
+    await ctx.reply(
+      `❌ No curve pools found for ${coin}. We don't support this coin yet.`
+    )
+    return ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step to allow user to enter supported coin
+  }
+
+  const referenceAsset = getReferenceAsset(coin, pools)
+  if (typeof referenceAsset === "string") {
+    const peggedTo = definePegAsset(referenceAsset)
+    const largestPool = await findLargestPoolForCoin(coin, peggedTo)
+    const currentPoolShareInPercent = (
+      await getCoinShareOfPool(coin, largestPool)
+    ).toFixed(2)
+
+    await createAlertSubscription({
+      coin,
+      db,
+      largestPool: largestPool.id,
+      lastKnownPoolShareInPercent: currentPoolShareInPercent,
+      peggedTo,
+      referenceAsset,
+      userId: ctx.session.userId,
+    })
+    await ctx.replyWithMarkdownV2(
+      escapeMarkdown(
+        `✅ Set up peg alert for *${coin}* ${
+          getCurrencyEmoji(referenceAsset) ||
+          "(tracking " + referenceAsset + ")"
+        }`
+      )
+    )
+  } else if (typeof referenceAsset === "object") {
+    /* If multiple reference assets are found, let the user pick the right one.
+     * This can happen in the rare case when there's an equal no. of stableswap
+     * as well as crypto pools containing the asset. For example, if there was 1 [FRAX/USDC]
+     * pool with USD as the reference asset, and 1 [FRAX/ETH] pool with CRYPTO as the
+     * reference asset.
+     */
+    const referenceAssets = Object.keys(referenceAsset)
+    const referenceAssetsNumberedList = referenceAssets
+      .map((item, index) => `${index + 1}. ${item}`)
+      .join("\n")
+    debug("Reference assets:", referenceAssets)
+
+    const buttons = Markup.inlineKeyboard([
+      referenceAssets.map((option) => Markup.button.callback(option, option)),
+    ])
+    await ctx.replyWithMarkdownV2(
+      escapeMarkdown(
+        `*Which coin should act as the peg reference for ${coin}?*\n\n${referenceAssetsNumberedList}\n\n_💡 FYI: For most coins we can determine the right peg automatically. But for smaller coins that have multiple pools on Curve this isn't always possible._`
+      ),
+      buttons
+    )
+
+    return ctx.wizard.next()
+  } else {
+    throw new Error(
+      `❌ Unable to determine reference asset for ${coin}. Reference asset is ${referenceAsset}`
+    )
+  }
+
+  return await ctx.scene.leave()
 }
 
 async function runCoinsCommand(ctx: CustomContext) {
