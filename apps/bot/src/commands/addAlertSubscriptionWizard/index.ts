@@ -21,5 +21,5 @@ addMiddlewaresToWizard(AddAlertSubscriptionWizard, [
 ])
 
 export default async function addAlert(ctx: CustomContext) {
-  ctx.scene.enter("addWizard")
+  await ctx.scene.enter("addWizard")
 }
