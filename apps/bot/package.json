@@ -17,7 +17,7 @@
     "gcp:firestore": "open https://console.cloud.google.com/firestore/databases/-default-",
     "gcp:function": "open https://console.cloud.google.com/functions/details/europe-west1/botFunction",
     "lint": "eslint src --fix --report-unused-disable-directives",
-    "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=botfunction' --format 'csv[separator=\" \"](timestamp,text_payload)'",
+    "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=botfunction' --format 'csv[separator=\" \",no-heading](timestamp.date(\"%Y-%m-%d %H:%M:%S.%f\"),labels.instanceId.slice(0:5).join(\"\"),text_payload)'",
     "scriptlint": "npx scriptlint",
     "start": "DEBUG=telegraf:main,bot,alerts,curve,telegram,user DEBUG_COLORS=true env-cmd functions-framework --target botFunction; npm run webhook:set",
     "start:prod": "NODE_ENV=production  npm start -- --port 8080",
