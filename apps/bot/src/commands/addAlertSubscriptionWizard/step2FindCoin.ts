@@ -30,6 +30,7 @@ export default async function step2FindCoin(ctx: CustomContext) {
 
   // If user first wants to see all supported coins
   if (userInput === "/coins") {
+    // Display supported coins and then re-run the current step to allow user to enter supported coin
     return runCoinsCommand(ctx)
   }
 
@@ -45,12 +46,13 @@ export default async function step2FindCoin(ctx: CustomContext) {
   ctx.session.coin = coin
 
   if (!(await getSupportedCoins()).includes(coin.toLowerCase())) {
-    ctx.replyWithMarkdownV2(
+    await ctx.replyWithMarkdownV2(
       escapeMarkdown(
-        `Sorry, *${coin}* is not supported.\n\nYou can view a list of all supported coins with */coins*`
+        `Sorry, *${coin}* is not supported. Enter another ticker or */cancel*\n\nYou can view a list of all supported coins with */coins*`
       )
     )
-    return ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step to allow user to enter supported coin
+    // Re-run the current step to allow user to enter supported coin
+    return
   }
 
   if (await alertSubscriptionExists(ctx.session.userId, coin, db)) {
@@ -76,7 +78,7 @@ export default async function step2FindCoin(ctx: CustomContext) {
     await ctx.reply(
       `❌ No curve pools found for ${coin}. We don't support this coin yet.`
     )
-    return ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step to allow user to enter supported coin
+    return // Re-run the current step to allow user to enter supported coin
   }
 
   const referenceAsset = getReferenceAsset(coin, pools)
@@ -142,7 +144,6 @@ async function runCoinsCommand(ctx: CustomContext) {
 
   if (coinsCommand) {
     await coinsCommand.command(ctx)
-    ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step to allow user to enter supported coin
   } else {
     throw new Error("/coins command not found in supported commands")
   }

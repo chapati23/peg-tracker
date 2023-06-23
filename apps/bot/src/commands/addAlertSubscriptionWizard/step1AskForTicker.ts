@@ -27,7 +27,7 @@ export default async function step1AskForTicker(ctx: CustomContext) {
     // If user just used `/add`, ask for ticker input
     await ctx.replyWithMarkdownV2(
       escapeMarkdown(
-        "*Which coin's peg would you like to monitor?*\n\nEnter a ticker symbol like USDT or see all supported coins with */coins*"
+        "*Which coin's peg would you like to monitor?*\n\nEnter a ticker symbol like *USDT*\n\nOr see all supported coins with */coins*"
       )
     )
 

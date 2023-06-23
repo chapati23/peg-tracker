@@ -17,11 +17,11 @@ export default async function step3SelectReferenceAssetManually(
 ) {
   if (!isCallback(ctx.update)) {
     debug("ctx.update ist not a callback message but was:", ctx.update)
-    await ctx.reply(
-      "Please select the correct reference asset by clicking one of the provided buttons"
-    )
 
-    return ctx.wizard.selectStep(ctx.wizard.cursor) // Re-run the current step to allow user to select a reference asset
+    // Re-run the current step to allow user to select a reference asset
+    return await ctx.reply(
+      "Please click one of the reference asset buttons above ⬆️"
+    )
   }
 
   if (!ctx.session.coin) throw new Error("ctx.session.coin is undefined")
