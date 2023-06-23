@@ -114,9 +114,7 @@ if (process.env["NODE_ENV"] === "production") {
   debug("✅ Bot launched successfully")
   debug(`👂 Listening for requests via webhook: ${webhookUrl}`)
 } else {
-  debug("Launching development bot with long polling...")
   // In development, use polling instead of webhooks because most local dev envs aren't accessible from the internet
-
   bot.launch()
 }
 
