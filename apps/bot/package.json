@@ -13,7 +13,7 @@
     "clean": "rimraf dist node_modules && rimraf *.tgz || true",
     "deploy": "../../deploy.sh bot",
     "dev": "npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start -- --port 8080'",
-    "gcp-build": "",
+    "gcp:build": "open https://console.cloud.google.com/cloud-build/builds;region=europe-west1?project=curve-pool-tracker",
     "gcp:firestore": "open https://console.cloud.google.com/firestore/databases/-default-",
     "gcp:function": "open https://console.cloud.google.com/functions/details/europe-west1/botFunction",
     "lint": "eslint src --fix --report-unused-disable-directives",
