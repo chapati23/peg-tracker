@@ -87,9 +87,10 @@ export default async function step2FindCoin(ctx: CustomContext) {
   if (typeof referenceAsset === "string") {
     const peggedTo = definePegAsset(referenceAsset)
     const largestPool = await findLargestPoolForCoin(coin, peggedTo)
-    const currentPoolShareInPercent = (
-      await getCoinShareOfPool(coin, largestPool)
-    ).toFixed(2)
+    const currentPoolShareInPercent = await getCoinShareOfPool(
+      coin,
+      largestPool
+    )
 
     await createAlertSubscription({
       coin,

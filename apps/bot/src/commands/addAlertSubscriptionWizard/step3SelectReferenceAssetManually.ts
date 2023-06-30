@@ -39,9 +39,10 @@ export default async function step3SelectReferenceAssetManually(
 
     const peggedTo = definePegAsset(referenceAsset)
     const largestPool = await findLargestPoolForCoin(coin, peggedTo)
-    const currentPoolShareInPercent = (
-      await getCoinShareOfPool(coin, largestPool)
-    ).toFixed(2)
+    const currentPoolShareInPercent = await getCoinShareOfPool(
+      coin,
+      largestPool
+    )
 
     await createAlertSubscription({
       coin,

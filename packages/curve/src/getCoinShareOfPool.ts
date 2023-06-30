@@ -4,7 +4,7 @@ import type { PoolTemplate } from "@curvefi/api/lib/pools/PoolTemplate.js"
 export default async function getCoinShareOfPool(
   coin: string,
   pool: PoolTemplate
-) {
+): Promise<string> {
   debug(`[${coin}] Get pool share of ${coin}...`)
   const totalPoolLiquidity = await pool.stats
     .totalLiquidity()
@@ -24,5 +24,5 @@ export default async function getCoinShareOfPool(
   const poolShare = (parseInt(balanceOfAlertCoin) / totalPoolLiquidity) * 100
   debug(`[${coin}] Pool share: ${poolShare.toFixed(2)}%`)
 
-  return poolShare
+  return poolShare.toFixed(2)
 }
