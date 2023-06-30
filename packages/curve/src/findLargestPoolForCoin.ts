@@ -7,6 +7,7 @@ export default async function findLargestPoolForCoin(
   amount = 10_000_000 // default value of 10m should be fine for most cases, but can be overridden if needed
 ) {
   debug(`[${from}] Find largest pool...`)
+  debug(`[${from}] Chain ID:`, curve.chainId)
   const { route } = await curve.router.getBestRouteAndOutput(from, to, amount)
 
   const poolId = route[0]?.poolId
