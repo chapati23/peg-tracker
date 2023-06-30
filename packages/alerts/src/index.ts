@@ -3,6 +3,7 @@ import getOrCreateAlert from "./alerts/create/getOrCreateAlert.js"
 import isAlert from "./alerts/isAlert.js"
 import getAlertByCoin from "./alerts/read/getAlertByCoin.js"
 import getAlertById from "./alerts/read/getAlertById.js"
+import updatePoolShare from "./alerts/update/updatePoolShare.js"
 import createAlertSubscription from "./alertSubscriptions/create/createAlertSubscription.js"
 import deleteAlertSubscriptionById from "./alertSubscriptions/delete/deleteAlertSubscriptionById.js"
 import alertSubscriptionExists from "./alertSubscriptions/read/alertSubscriptionExists.js"
@@ -20,4 +21,5 @@ export {
   getAlertSubscriptionByUserIdAndAlertId,
   getOrCreateAlert,
   isAlert,
+  updatePoolShare,
 }

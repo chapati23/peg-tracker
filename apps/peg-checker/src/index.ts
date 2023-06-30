@@ -1,6 +1,10 @@
 import { Firestore } from "@google-cloud/firestore"
 import { cloudEvent } from "@google-cloud/functions-framework"
-import { getAlertById, getAlertSubscriptionsByUserId } from "alerts"
+import {
+  getAlertById,
+  getAlertSubscriptionsByUserId,
+  updatePoolShare,
+} from "alerts"
 import {
   initCurveApi,
   findLargestPoolForCoin,
@@ -95,9 +99,7 @@ cloudEvent("pegChecker", async (/*cloudEvent*/) => {
           debug(
             `[${alert.coin}] Update last known pool share of ${alert.coin} in DB`
           )
-          await db.doc(`users/${userRef.id}/alerts/${alert.id}`).update({
-            lastKnownPoolShareInPercent: currentPoolShareInPercent.toFixed(2),
-          })
+          updatePoolShare(alert.id, currentPoolShareInPercent, db)
         } else {
           debug(
             `[${alert.coin}] No alert triggered because current share of coin has improved since the last check`
