@@ -2,37 +2,126 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "Dev",
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "dependsOn": [
+        "Run Build in Watch Mode",
+        "Run Pubsub",
+        "Run Bot",
+        "Run Price Impact Calculator"
+      ]
+    },
+    {
       "label": "Run Build in Watch Mode",
       "type": "shell",
       "command": "turbo build:watch",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "group": "develop"
-      },
-      "problemMatcher": []
+      "presentation": { "group": "develop" },
+      "isBackground": true,
+      "problemMatcher": ["$tsc-watch"]
     },
     {
-      "label": "Run Bot in Dev Mode",
+      "label": "Run Bot",
       "type": "shell",
       "command": "turbo dev --filter bot",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "group": "develop"
-      },
-      "problemMatcher": []
+      "dependsOn": "Run Pubsub",
+      "presentation": { "group": "develop" },
+      "isBackground": true,
+      "problemMatcher": {
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "Error:",
+            "file": 0,
+            "message": 1,
+            "line": 2
+          }
+        ],
+        // This is necessary so VS Code knows when the emulator has started and it can proceed with the next tasks.
+        // Without this, the next tasks will never start.
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Serving function...",
+          "endsPattern": "URL: http://localhost:"
+        }
+      }
     },
     {
-      "label": "Run Peg Checker in Dev Mode",
+      "label": "Run Price Impact Calculator",
+      "type": "shell",
+      "command": "turbo dev --filter price-impact-calculator --log-prefix none",
+      "dependsOn": "Run Pubsub",
+      "presentation": { "group": "develop" },
+      "isBackground": true,
+      "problemMatcher": {
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "Error:",
+            "file": 0,
+            "message": 1,
+            "line": 2
+          }
+        ],
+        // This is necessary so VS Code knows when the emulator has started and it can proceed with the next tasks.
+        // Without this, the next tasks will never start.
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Serving function...",
+          "endsPattern": "URL: http://localhost:"
+        }
+      }
+    },
+    {
+      "label": "Run Peg Checker",
       "type": "shell",
       "command": "turbo dev --filter peg-checker",
-      "presentation": {
-        "reveal": "always",
-        "panel": "new",
-        "group": "develop"
-      },
-      "problemMatcher": []
+      "presentation": { "group": "develop" },
+      "problemMatcher": {
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "Error:",
+            "file": 0,
+            "message": 1,
+            "line": 2
+          }
+        ],
+        // This is necessary so VS Code knows when the emulator has started and it can proceed with the next tasks.
+        // Without this, the next tasks will never start.
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "Serving function...",
+          "endsPattern": "URL: http://localhost:"
+        }
+      }
+    },
+    {
+      "label": "Run Pubsub",
+      "type": "shell",
+      "command": "turbo pubsub:kill; turbo pubsub",
+      "isBackground": true,
+      "presentation": { "group": "develop" },
+      "problemMatcher": {
+        "fileLocation": ["relative", "${workspaceFolder}"],
+        "pattern": [
+          {
+            "regexp": "\\[pubsub\\] INFO: Server started, listening on",
+            "file": 0,
+            "message": 1,
+            "line": 2
+          }
+        ],
+        // This is necessary so VS Code knows when the emulator has started and it can proceed with the next tasks.
+        // Without this, the next tasks will never start.
+        "background": {
+          "activeOnStart": true,
+          "beginsPattern": "\\[pubsub] This is the Google Pub/Sub fake.",
+          "endsPattern": "\\[pubsub\\] INFO: Server started, listening on"
+        }
+      }
     }
   ]
 }
