@@ -1,14 +1,13 @@
 import { getAlertByCoin } from "alerts"
-import { findLargestPoolForCoin, calculateSellPressureToDepeg } from "curve"
-import { sendPriceImpactResults } from "telegram"
 import { db } from "../index.js"
 import debug from "../utils/debug.js"
 import getCoinFromCommand from "../utils/getCoinFromCommand.js"
 import isTextMessage from "../utils/isTextMessage.js"
+import pubsubSetup from "../utils/pubsubSetup.js"
 import type { CustomContext } from "../types.js"
 
 export default async function checkAlert(ctx: CustomContext) {
-  ctx.sendChatAction("typing")
+  await ctx.sendChatAction("typing")
 
   if (!isTextMessage(ctx.message)) {
     throw new Error(
@@ -16,32 +15,32 @@ export default async function checkAlert(ctx: CustomContext) {
     )
   }
 
-  const userId = ctx.message.from.id.toString()
   const coin = getCoinFromCommand(ctx)
+  await ctx.reply(
+    `⌛️ Calculating depeg risk for ${coin}, this can take up to 2 minutes...`
+  )
 
-  ctx.reply("⌛️ Calculating depeg risk, this can take up to 2 minutes...")
-  debug(`[Check] 🌀️ Checking depeg risk for ${coin} for user ${userId}`)
+  const userId = ctx.message.from.id.toString()
+  const alert = await getAlertByCoin(coin, db)
+
+  if (!alert) {
+    await ctx.reply(
+      `❌ Couldn't find alert for ${coin}. Internal server error.`
+    )
+    return
+  }
 
   try {
-    const alert = await getAlertByCoin(coin, db)
-
-    if (!alert) {
-      throw new Error(`Couldn't find alert for ${coin} in DB`)
-    }
-
-    const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
-    const totalPoolLiquidity = await pool.stats
-      .totalLiquidity()
-      .then((totalLiquidity) => parseInt(totalLiquidity))
-    const priceImpactResults = await calculateSellPressureToDepeg(
-      alert.coin,
-      alert.peggedTo,
-      totalPoolLiquidity
-    )
-
-    await sendPriceImpactResults({ alert, priceImpactResults, userId })
+    debug(ctx, `[Check] 🌀️ Checking depeg risk for ${coin} for user ${userId}`)
+    const { topic } = await pubsubSetup()
+    await topic.publishMessage({
+      data: Buffer.from(alert.id),
+      attributes: {
+        userId: ctx.message.from.id.toString(),
+      },
+    })
   } catch (error) {
-    debug(`❌ Checking depeg risk for ${coin} failed:`, error)
+    debug(ctx, `❌ Checking depeg risk for ${coin} failed:`, error)
     await ctx.reply(
       `❌ Couldn't check depeg risk for ${coin} because of an unexpected error`
     )

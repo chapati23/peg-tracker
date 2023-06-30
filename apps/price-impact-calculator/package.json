@@ -1,0 +1,44 @@
+{
+  "name": "price-impact-calculator",
+  "version": "1.0.0",
+  "description": "",
+  "author": "Philip Paetz <philip.paetz@me.com>",
+  "license": "UNLICENSED",
+  "main": "dist/index.js",
+  "type": "module",
+  "packageManager": "npm@9.4.2",
+  "scripts": {
+    "build": "npx is-ci || tsc",
+    "build:watch": "tsc --watch",
+    "clean": "rimraf dist node_modules && rimraf *.tgz || true",
+    "deploy": "../../deploy.sh price-impact-calculator",
+    "dev": "$(gcloud beta emulators pubsub env-init); DEBUG=price-impact-calculator,alerts,curve,telegram DEBUG_COLORS=true npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start'; unset PUBSUB_EMULATOR_HOST",
+    "gcp:build": "open https://console.cloud.google.com/cloud-build/builds;region=europe-west1?project=curve-pool-tracker",
+    "gcp:db": "npm run gcp:firestore",
+    "gcp:firestore": "open https://console.cloud.google.com/firestore/databases/-default-",
+    "gcp:function": "open https://console.cloud.google.com/functions/details/europe-west1/priceImpactCalculator",
+    "lint": "eslint src --fix --report-unused-disable-directives",
+    "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=priceImpactCalculator' --format 'csv[separator=\" \",no-heading](timestamp.date(\"%Y-%m-%d %H:%M:%S.%f\"),labels.instanceId.slice(0:5).join(\"\"),text_payload)'",
+    "scriptlint": "npx scriptlint",
+    "start": "env-cmd functions-framework --target priceImpactCalculationRequest --signature-type cloudevent",
+    "test": "echo '❗️ Please add tests soon ❗️'",
+    "trigger": "./trigger.sh"
+  },
+  "dependencies": {
+    "@curvefi/api": "^2.41.2",
+    "@google-cloud/firestore": "^6.6.1",
+    "@google-cloud/functions-framework": "^3.2.0",
+    "@google-cloud/pubsub": "^3.7.1",
+    "alerts": "*",
+    "curve": "*",
+    "debug": "^4.3.4",
+    "telegram": "*"
+  },
+  "devDependencies": {
+    "eslint-config-custom": "*",
+    "is-ci": "^3.0.1",
+    "rimraf": "^5.0.1",
+    "shared-types": "*",
+    "tsconfig": "*"
+  }
+}
