@@ -1,4 +1,5 @@
 import debug from "./debug.js"
+import getPoolLiquidity from "./getPoolLiquidity.js"
 import type { PoolTemplate } from "@curvefi/api/lib/pools/PoolTemplate.js"
 
 export default async function getCoinShareOfPool(
@@ -6,10 +7,7 @@ export default async function getCoinShareOfPool(
   pool: PoolTemplate
 ): Promise<string> {
   debug(`[${coin}] Get pool share of ${coin}...`)
-  const totalPoolLiquidity = await pool.stats
-    .totalLiquidity()
-    .then((totalLiquidity) => parseInt(totalLiquidity))
-
+  const totalPoolLiquidity = await getPoolLiquidity(pool)
   const indexOfAlertCoin = pool.wrappedCoins.findIndex((val) => val === coin)
   const balanceOfAlertCoin = await pool.stats
     .wrappedBalances()

@@ -6,6 +6,7 @@ import {
   findLargestPoolForCoin,
   getCoinShareOfPool,
   calculateSellPressureToDepeg,
+  getPoolLiquidity,
 } from "curve"
 import { sendPriceImpactResults } from "telegram"
 import { getAllUsers } from "user"
@@ -70,18 +71,15 @@ cloudEvent("pegChecker", async (/*cloudEvent*/) => {
           `[${alert.coin}] Last known pool share: ${lastKnownPoolShareInPercent}%`
         )
         debug(
-          `[${
-            alert.coin
-          }] Current pool share: ${currentPoolShareInPercent.toFixed(2)}%`
+          `[${alert.coin}] Current pool share: ${currentPoolShareInPercent}%`
         )
         if (
           !lastKnownPoolShareInPercent ||
-          currentPoolShareInPercent < parseFloat(lastKnownPoolShareInPercent)
+          parseFloat(currentPoolShareInPercent) <
+            parseFloat(lastKnownPoolShareInPercent)
         ) {
           debug(`[${alert.coin}] Trigger alert!`)
-          const totalPoolLiquidity = await pool.stats
-            .totalLiquidity()
-            .then((totalLiquidity) => parseInt(totalLiquidity))
+          const totalPoolLiquidity = await getPoolLiquidity(pool)
           const priceImpactResults = await calculateSellPressureToDepeg(
             alert.coin,
             alert.peggedTo,
