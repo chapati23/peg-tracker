@@ -5,7 +5,7 @@ import step2FindCoin from "./step2FindCoin.js"
 import type { CustomContext } from "../../types.js"
 
 export default async function step1AskForTicker(ctx: CustomContext) {
-  debug("[AddAlert :: Step 1 :: Ask for ticker symbol]")
+  debug(ctx, "AddAlert :: Step 1 :: Ask for ticker symbol")
 
   if (!isTextMessage(ctx.message)) {
     throw new Error(

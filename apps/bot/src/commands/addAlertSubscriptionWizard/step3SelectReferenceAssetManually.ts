@@ -16,7 +16,7 @@ export default async function step3SelectReferenceAssetManually(
   ctx: CustomContext
 ) {
   if (!isCallback(ctx.update)) {
-    debug("ctx.update ist not a callback message but was:", ctx.update)
+    debug(ctx, `ctx.update is not a callback message but was:`, ctx.update)
 
     // Re-run the current step to allow user to select a reference asset
     return await ctx.reply(
@@ -62,6 +62,7 @@ export default async function step3SelectReferenceAssetManually(
     )
   } catch (error) {
     debug(
+      ctx,
       `[${ctx.session.coin}] ❌ Failed to create alert subscription:`,
       error
     )

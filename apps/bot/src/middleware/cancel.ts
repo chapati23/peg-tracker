@@ -8,7 +8,7 @@ export default async function cancelMiddleware(
   ctx: CustomContext,
   next: () => Promise<void>
 ) {
-  debug("[Middleware :: Cancel :: START]")
+  debug(ctx, "[Middleware :: Cancel :: START]")
 
   if (isTextMessage(ctx.message)) {
     const userInputWithoutSlash = ctx.message.text
@@ -18,11 +18,11 @@ export default async function cancelMiddleware(
     const exitWords = ["cancel", "exit", "leave", "stop"]
     if (exitWords.includes(userInputWithoutSlash)) {
       await ctx.reply("🔙 Cancelled. Back to main menu")
-      debug("[Middleware :: Cancel :: EXIT]")
+      debug(ctx, "[Middleware :: Cancel :: EXIT]")
       return await ctx.scene.leave()
     }
   }
 
-  debug("[Middleware :: Cancel :: CONTINUE]")
+  debug(ctx, "[Middleware :: Cancel :: CONTINUE]")
   await next() // Continue to the next step or middleware
 }

@@ -26,6 +26,7 @@ export default async function listAlertsSubscriptions(ctx: CustomContext) {
     )
   } catch (error) {
     debug(
+      ctx,
       `❌ Failed to list alert subscriptions for user ${ctx.message.from.id.toString()}:`,
       error
     )

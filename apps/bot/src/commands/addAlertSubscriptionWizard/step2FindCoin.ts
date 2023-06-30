@@ -18,7 +18,7 @@ import type { CustomContext } from "../../types.js"
 import type { Message } from "telegraf/types"
 
 export default async function step2FindCoin(ctx: CustomContext) {
-  debug("[AddAlert :: Step 2 :: Find Coin]")
+  debug(ctx, `AddAlert :: Step 2 :: Find Coin`)
 
   if (!isTextMessage(ctx.message)) {
     throw new Error(
@@ -72,7 +72,9 @@ export default async function step2FindCoin(ctx: CustomContext) {
   const pools = getPoolsForCoin(coin)
   if (!pools || pools.length === 0) {
     // NOTE: We should never land in here. Still better to explicitly handle worst case scenario than crashing
+
     debug(
+      ctx,
       `❌ No curve pools found for ${coin}. This should never happen because we're checking if the entered coin is in the supported coins list earlier 🤔`
     )
     await ctx.reply(
@@ -117,7 +119,7 @@ export default async function step2FindCoin(ctx: CustomContext) {
     const referenceAssetsNumberedList = referenceAssets
       .map((item, index) => `${index + 1}. ${item}`)
       .join("\n")
-    debug("Reference assets:", referenceAssets)
+    debug(ctx, `Reference assets:`, referenceAssets)
 
     const buttons = Markup.inlineKeyboard([
       referenceAssets.map((option) => Markup.button.callback(option, option)),

@@ -55,45 +55,45 @@ bot.use(stage.middleware())
 /* COMMANDS */
 /************/
 bot.start(async (ctx) => {
-  debug("[Start :: START]")
+  debug(ctx, "Start :: START")
   await start(ctx)
-  debug("[Start :: END]")
+  debug(ctx, "Start :: END")
 })
 
 bot.help(async (ctx) => {
-  debug("[Help :: START]")
+  debug(ctx, "Help :: START")
   await help(ctx)
-  debug("[Help :: END]")
+  debug(ctx, "Help :: END")
 })
 
 bot.command(/\badd/i, async (ctx) => {
-  debug("[AddAlert :: START]")
+  debug(ctx, "AddAlert :: START")
   await addAlert(ctx)
-  debug("[AddAlert :: END]")
+  debug(ctx, "AddAlert :: END")
 })
 
 bot.command(/\blist/i, async (ctx) => {
-  debug("[ListAlerts :: START]")
+  debug(ctx, "ListAlerts :: START")
   await listAlertsSubscriptions(ctx)
-  debug("[ListAlerts :: END]")
+  debug(ctx, "ListAlerts :: END")
 })
 
 bot.command(/\bcheck_(\w+)/i, async (ctx) => {
-  debug("[CheckAlert :: START]")
+  debug(ctx, "CheckAlert :: START")
   await checkAlert(ctx)
-  debug("[CheckAlert :: END]")
+  debug(ctx, "CheckAlert :: END")
 })
 
 bot.command(/\bcoins/i, async (ctx) => {
-  debug("[Coins :: START]")
+  debug(ctx, "Coins :: START")
   await showSupportedCoins(ctx)
-  debug("[Coins :: END]")
+  debug(ctx, "Coins :: END")
 })
 
 bot.command(/\bdelete_(\w+)/i, async (ctx) => {
-  debug("[DeleteAlert :: START]")
+  debug(ctx, "DeleteAlert :: START")
   await deleteAlertSubscription(ctx)
-  debug("[DeleteAlert :: END]")
+  debug(ctx, "DeleteAlert :: END")
 })
 
 if (process.env["NODE_ENV"] === "production") {
@@ -143,17 +143,13 @@ export default http("botFunction", async (req, res) => {
   }
 
   if (isCallback(req.body.update)) {
-    debug(
-      "🆕 New request\n",
-      `[${req.body.update_id}] Query: ${req.body.callback_query}\n`
-    )
+    debug(req.body, "🆕 Request\n", `Query: ${req.body.callback_query}\n`)
   } else {
     debug(
-      "🆕 New request\n",
-      `[${req.body.update_id}] Text: ${req.body.message?.text}\n`,
-      `[${req.body.update_id}] From: ${JSON.stringify(
-        req.body.message?.from
-      )}\n`
+      req.body,
+      "🆕 Request\n",
+      `Text: ${req.body.message?.text}\n`,
+      `From: ${JSON.stringify(req.body.message?.from)}\n`
     )
   }
 

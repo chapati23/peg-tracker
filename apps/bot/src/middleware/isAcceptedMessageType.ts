@@ -9,13 +9,13 @@ export default async function isAcceptedMessageTypeMiddleware(
   ctx: CustomContext,
   next: () => Promise<void>
 ) {
-  debug("[Middleware :: isTextMessage :: START")
+  debug(ctx, "[Middleware :: isTextMessage :: START")
   if (!isTextMessage(ctx.message) && !isCallback(ctx.update)) {
     debug(
-      "User didn't reply with accepted message type, re-running same wizard step",
-      ctx
+      ctx,
+      "User didn't reply with accepted message type, re-running same wizard step"
     )
-    debug("[Middleware :: isTextMessage :: EXIT")
+    debug(ctx, "[Middleware :: isTextMessage :: EXIT")
 
     await ctx.reply(
       "Sorry, I can't handle this message type. Please try again."
@@ -25,6 +25,6 @@ export default async function isAcceptedMessageTypeMiddleware(
     return
   }
 
-  debug("[Middleware :: isTextMessage :: CONTINUE")
+  debug(ctx, "[Middleware :: isTextMessage :: CONTINUE")
   await next() // Continue to the next step or middleware
 }

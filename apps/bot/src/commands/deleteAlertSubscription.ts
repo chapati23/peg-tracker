@@ -24,7 +24,7 @@ export default async function deleteAlertSubscription(ctx: CustomContext) {
   ctx.replyWithMarkdownV2(escapeMarkdown(`⏳ Deleting *${coin}* alert...`))
 
   try {
-    debug(`[${coin}] 🗑️  Deleting alert subscription for user ${userId}`)
+    debug(ctx, `[${coin}] 🗑️  Deleting alert subscription for user ${userId}`)
 
     const alert = await getAlertByCoin(coin, db)
 
@@ -40,6 +40,7 @@ export default async function deleteAlertSubscription(ctx: CustomContext) {
 
     if (!alertSubscription) {
       debug(
+        ctx,
         `[${coin}] No alert subscription found for alert ID '${alert.id}' and user ID '${userId}'. User might have already deleted it in the past.`
       )
       await ctx.replyWithMarkdownV2(
@@ -54,7 +55,7 @@ export default async function deleteAlertSubscription(ctx: CustomContext) {
       )
     }
   } catch (error) {
-    debug(`[${coin}] ❌ Deleting alert failed:`, error)
+    debug(ctx, `[${coin}] ❌ Deleting alert failed:`, error)
     await ctx.replyWithMarkdownV2(
       escapeMarkdown(
         `❌ Couldn't delete *${coin}* alert because of an unexpected error`
