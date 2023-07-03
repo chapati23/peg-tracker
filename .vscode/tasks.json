@@ -10,8 +10,10 @@
       "dependsOn": [
         "Run Build in Watch Mode",
         "Run Pubsub",
+        "Run Pubsub Setup",
         "Run Bot",
-        "Run Price Impact Calculator"
+        "Run Price Impact Calculator",
+        "Run Peg Checker"
       ]
     },
     {
@@ -78,7 +80,9 @@
       "label": "Run Peg Checker",
       "type": "shell",
       "command": "turbo dev --filter peg-checker",
+      "dependsOn": "Run Pubsub",
       "presentation": { "group": "develop" },
+      "isBackground": true,
       "problemMatcher": {
         "fileLocation": ["relative", "${workspaceFolder}"],
         "pattern": [
@@ -101,7 +105,7 @@
     {
       "label": "Run Pubsub",
       "type": "shell",
-      "command": "turbo pubsub:kill; turbo pubsub",
+      "command": "npm run kill -w pubsub; turbo dev --filter pubsub",
       "isBackground": true,
       "presentation": { "group": "develop" },
       "problemMatcher": {
@@ -122,6 +126,11 @@
           "endsPattern": "\\[pubsub\\] INFO: Server started, listening on"
         }
       }
+    },
+    {
+      "label": "Run Pubsub Setup",
+      "command": "npm run setup -w pubsub",
+      "dependsOn": ["Run Pubsub"]
     }
   ]
 }

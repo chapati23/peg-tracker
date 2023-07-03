@@ -11,31 +11,30 @@
     "build": "npx is-ci || tsc",
     "build:watch": "tsc --watch",
     "clean": "rimraf dist node_modules && rimraf *.tgz || true",
-    "deploy": "./deploy.sh",
-    "dev": "npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start'",
+    "deploy": "../../deploy.sh peg-checker",
+    "dev": "$(gcloud beta emulators pubsub env-init); DEBUG=peg-checker,alerts,curve,telegram,user,utils DEBUG_COLORS=true npx nodemon --watch dist --watch .env --watch apps/peg-checker/package.json --watch '../../packages/**/dist/**/*' --exec 'npm start'; unset PUBSUB_EMULATOR_HOST",
+    "gcp:build": "open https://console.cloud.google.com/cloud-build/builds;region=europe-west1?project=curve-pool-tracker",
+    "gcp:db": "npm run gcp:firestore",
+    "gcp:firestore": "open https://console.cloud.google.com/firestore/databases/-default-",
+    "gcp:function": "open https://console.cloud.google.com/functions/details/europe-west1/pegChecker",
     "lint": "eslint src --fix --report-unused-disable-directives",
+    "logs": "CLOUDSDK_PYTHON_SITEPACKAGES=1 gcloud alpha logging tail 'resource.labels.service_name=pegChecker' --format 'csv[separator=\" \",no-heading](timestamp.date(\"%Y-%m-%d %H:%M:%S.%f\"),labels.instanceId.slice(0:5).join(\"\"),text_payload)'",
     "scriptlint": "npx scriptlint",
-    "start": "DEBUG=peg-checker,alerts,curve,user DEBUG_COLORS=true env-cmd functions-framework --target pegChecker --port 8081",
-    "start:prod": "NODE_ENV=production env-cmd functions-framework --target pegChecker",
+    "start": "env-cmd functions-framework --target pegChecker --signature-type cloudevent",
     "test": "echo '❗️ Please add tests soon ❗️'",
     "trigger": "./trigger.local.sh",
     "trigger:prod": "./trigger.prod.sh"
-  },
-  "overrides": {
-    "cloudevents": "^7.0.0"
   },
   "dependencies": {
     "@google-cloud/firestore": "^6.5.0",
     "@google-cloud/functions-framework": "^3.2.0",
     "alerts": "^1.0.0",
-    "bot": "*",
-    "curve": "*",
     "debug": "^4.3.4",
-    "telegram": "*",
-    "user": "*"
+    "pubsub": "*",
+    "user": "*",
+    "utils": "*"
   },
   "devDependencies": {
-    "@types/js-yaml": "^4.0.5",
     "eslint-config-custom": "*",
     "is-ci": "^3.0.1",
     "rimraf": "^5.0.1",

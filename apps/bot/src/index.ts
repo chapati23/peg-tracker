@@ -2,6 +2,7 @@ import { Firestore, setLogFunction } from "@google-cloud/firestore"
 import { http } from "@google-cloud/functions-framework"
 import { initCurveApi } from "curve"
 import { Telegraf, session, Scenes } from "telegraf"
+import { safeEnvVar } from "utils"
 import addAlert, {
   AddAlertSubscriptionWizard,
 } from "./commands/addAlertSubscriptionWizard/index.js"
@@ -20,15 +21,6 @@ if (process.env["DEBUG"] && process.env["DEBUG"].includes("firestore")) {
   setLogFunction(debug)
 }
 
-if (
-  process.env["TELEGRAM_BOT_TOKEN"] == null ||
-  typeof process.env["TELEGRAM_BOT_TOKEN"] !== "string"
-) {
-  throw new Error(
-    "Missing env var TELEGRAM_BOT_TOKEN. Can't send Telegram messages without a valid bot token."
-  )
-}
-
 /****************** COLD START SECTION ******************/
 /* This code can be shared by multiple cloud function
 /* instances. Here we define global state and init our API
@@ -40,7 +32,11 @@ if (
 export const db = new Firestore({ preferRest: true })
 
 // Initialize the bot using the bot token
-const bot = new Telegraf<CustomContext>(process.env["TELEGRAM_BOT_TOKEN"])
+const botToken = safeEnvVar(
+  "TELEGRAM_BOT_TOKEN",
+  "Can't send Telegram messages without a valid bot token."
+)
+const bot = new Telegraf<CustomContext>(botToken)
 
 /**************/
 /* MIDDLEWARE */
@@ -127,6 +123,7 @@ process.once("SIGTERM", () => {
   bot.stop("SIGTERM")
 })
 
+safeEnvVar("INFURA_API_KEY", "Can't use Curve API without an Infura API Key")
 await initCurveApi()
 
 /**********/

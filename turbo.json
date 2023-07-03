@@ -7,6 +7,7 @@
         "alerts#build",
         "curve#build",
         "telegram#build",
+        "utils#build",
         "user#build"
       ]
     },
@@ -15,11 +16,23 @@
         "alerts#build",
         "curve#build",
         "telegram#build",
+        "utils#build",
         "user#build"
       ]
     },
     "price-impact-calculator#build": {
-      "dependsOn": ["alerts#build", "curve#build", "telegram#build"]
+      "dependsOn": [
+        "alerts#build",
+        "curve#build",
+        "telegram#build",
+        "utils#build"
+      ]
+    },
+    "curve#build": {
+      "dependsOn": ["utils#build"]
+    },
+    "telegram#build": {
+      "dependsOn": ["utils#build"]
     },
     "build": {},
     "build:watch": { "cache": false },
@@ -27,10 +40,7 @@
     "dev": { "cache": false },
     "deploy": {},
     "lint": {},
-    "logs": { "cache": false },
     "pack": {},
-    "pubsub": { "cache": false },
-    "pubsub:kill": { "cache": false },
     "scriptlint": {},
     "start": { "cache": false },
     "start:prod": { "cache": false },

@@ -1,59 +1,31 @@
-import curve from "@curvefi/api"
-import chalk from "chalk"
 import debug from "./debug.js"
-import type { PriceImpact } from "shared-types"
+import getPriceImpacts from "./getPriceImpacts.js"
+import type { CloudEvent } from "@google-cloud/functions-framework"
+import type { PriceImpact, PubSubEvent } from "shared-types"
 
 // Function to calculate how much MIM can be sold before the price drops by a certain percentage
 export default async function calculateSellPressureToDepeg(
   from: string,
   to: string,
-  totalPoolLiquidity: number
+  poolLiquidity: number,
+  event: CloudEvent<PubSubEvent>
 ): Promise<PriceImpact[]> {
   debug(
-    `⏳ Calculating sell pressure to depeg ${chalk.bold(
-      from
-    )} by querying Curve Router with different swap amounts...`
+    `[${event.id}] ⏳ Simulating increasing swap amounts to depeg the pool...`
   )
   const swapAmounts: number[] = []
 
   // 1. Start by swapping 10% of the total pool liquidity
   // 2. Then increase the swap amounts by 3% with each iteration until we hit 39% (which should depeg any pool)
-  for (let i = 0.1; i <= 0.39; i += 0.03) {
-    swapAmounts.push(totalPoolLiquidity * i)
+  for (let i = 0.15; i <= 0.99; i += 0.05) {
+    swapAmounts.push(poolLiquidity * i)
   }
 
   // Iteratively swap higher and higher amounts  until price impact hits our threshold level
-  const priceImpacts = await getPriceImpactsFromCurveRouter(
-    swapAmounts,
-    from,
-    to
-  )
+  const priceImpacts = await getPriceImpacts(swapAmounts, from, to, event)
 
-  const filteredResults = filterPriceImpacts(priceImpacts)
-  debug("✅ Finished depeg calculations")
-  return filteredResults
-}
-
-// Parallelize fetching of swap queries to speed up performance
-async function getPriceImpactsFromCurveRouter(
-  swapAmounts: number[],
-  from: string,
-  to: string
-) {
-  const priceImpacts = []
-  for (const swapAmount of swapAmounts) {
-    debug(
-      `🌀 Swapping ${swapAmount.toLocaleString(undefined, {
-        maximumFractionDigits: 0,
-      })} ${from} to ${to}...`
-    )
-    const priceImpact = await curve.router.priceImpact(from, to, swapAmount)
-    debug(`🟰 ${priceImpact.toFixed(2)}% price impact`)
-
-    priceImpacts.push({ swapAmount, priceImpact })
-  }
-
-  return priceImpacts
+  debug(`[${event.id}] ✅ Finished price impact calculations`)
+  return filterPriceImpacts(priceImpacts)
 }
 
 /**

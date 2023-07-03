@@ -1,8 +1,8 @@
 import debug from "./debug.js"
-import type { FilteredPools } from "./getPoolsForCoin.js"
+import type { FilteredPool } from "./getPoolsForCoin.js"
 import type { IPoolData } from "@curvefi/api/lib/interfaces.js"
 
-export default function getReferenceAsset(coin: string, pools: FilteredPools) {
+export default function getReferenceAsset(coin: string, pools: FilteredPool[]) {
   let referenceAsset
 
   // If single pool found => take its reference asset

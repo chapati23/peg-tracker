@@ -1,27 +1,20 @@
 import curve from "@curvefi/api"
+import { safeEnvVar } from "utils"
 import debug from "./debug.js"
 
 export default async function initCurveApi() {
-  if (
-    process.env["INFURA_API_KEY"] == null ||
-    typeof process.env["INFURA_API_KEY"] !== "string"
-  ) {
-    throw new Error(
-      "Missing env var INFURA_API_KEY. Can't use Curve API without Infura."
-    )
-  }
-
-  debug("Init web3 connection via Infura...")
-  await curve.init(
-    "Infura",
-    { network: "homestead", apiKey: process.env["INFURA_API_KEY"] },
-    { chainId: 1 }
+  const apiKey = safeEnvVar(
+    "INFURA_API_KEY",
+    "Can't use Curve API without an Infura API Key."
   )
 
-  debug("Fetch pools...")
-  await curve.factory.fetchPools()
+  debug("Init web3 connection via Infura...")
+  await curve.init("Infura", { network: "homestead", apiKey }, { chainId: 1 })
+
   debug("Fetch factory pools...")
-  await curve.cryptoFactory.fetchPools()
+  await curve.factory.fetchPools()
+  debug("Fetch crvUSD factory pools...")
+  await curve.crvUSDFactory.fetchPools()
 
   return curve
 }

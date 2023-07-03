@@ -1,8 +1,8 @@
 import _debug from "debug"
-import type { PubSubEvent } from "../types.js"
 import type { CloudEvent } from "@google-cloud/functions-framework"
+import type { PubSubEvent } from "shared-types"
 
-const debug = _debug("price-impact-calculator")
+const debug = _debug("peg-checker")
 
 // Define the wrapping function
 function debugWrapper(...args: Array<CloudEvent<PubSubEvent> | unknown>) {

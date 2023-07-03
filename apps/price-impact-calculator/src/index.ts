@@ -1,17 +1,22 @@
 import { Firestore } from "@google-cloud/firestore"
 import { cloudEvent } from "@google-cloud/functions-framework"
-import { getAlertById, updatePoolShare } from "alerts"
+import { getAlertById } from "alerts"
 import {
+  calculateSellPressureToDepeg,
   findLargestPoolForCoin,
-  getCoinShareOfPool,
+  getPool,
+  getPoolLink,
   getPoolLiquidity,
+  getPoolsForCoin,
   initCurveApi,
 } from "curve"
-import { sendPriceImpactResults } from "telegram"
-import calculateSellPressureToDepeg from "./calculatePriceImpact.js"
-import debug from "./utils/debug.js"
-import isPubSubEvent from "./utils/isPubsubEvent.js"
-import type { PubSubEvent } from "./types.js"
+import { isPubSubEvent } from "pubsub"
+import { sendChatMsg, sendPriceImpactResults } from "telegram"
+import { getShorthandNumber, safeEnvVar } from "utils"
+import debug from "./debug.js"
+import printPoolBalances from "./printPoolBalances.js"
+import updatePoolShare from "./updatePoolShare.js"
+import type { PubSubEvent } from "shared-types"
 
 /****************** COLD START SECTION ******************/
 /* This code can be shared by multiple cloud function
@@ -20,17 +25,27 @@ import type { PubSubEvent } from "./types.js"
 /* instances which should speed up overall performance.
 /********************************************************/
 
-// In development mode, set up pubsub emulator first
-if (process.env["NODE_ENV"] !== "production") {
-  const { default: pubsubSetup } = await import("./utils/pubsubSetup.js")
-  await pubsubSetup()
-}
+safeEnvVar(
+  "TELEGRAM_BOT_TOKEN",
+  "Can't send Telegram messages without a bot token"
+)
 
 // Init Web3 connection via Infura
+safeEnvVar("INFURA_API_KEY", "Can't use Curve API without an Infura API Key")
 await initCurveApi()
 
+// In dev, setup connection to pubsub emulator
+if (process.env["NODE_ENV"] !== "production") {
+  const { setupLocalPubsubSubscriptionTo } = await import("pubsub")
+  const topic = safeEnvVar(
+    "PUBSUB_TOPIC",
+    "Can't subscribe to pubsub emulator without a topic name"
+  )
+  await setupLocalPubsubSubscriptionTo(topic)
+}
+
 // Init Firestore (prefer rest because gRPC adds quite a bit of ms to the cold start performance)
-const db = new Firestore({ preferRest: true })
+export const db = new Firestore({ preferRest: true })
 
 /**********/
 /* LAUNCH */
@@ -48,10 +63,7 @@ cloudEvent<PubSubEvent>("priceImpactCalculationRequest", async (event) => {
   if (!processedEventIds.includes(event.id)) {
     processedEventIds.push(event.id)
   } else {
-    debug(
-      event,
-      `❌ Event ID ${event.id} already processed. Exiting to avoid redundant execution.`
-    )
+    debug(event, `⚠️ Event ID ${event.id} already processed.`)
     return
   }
 
@@ -66,12 +78,12 @@ cloudEvent<PubSubEvent>("priceImpactCalculationRequest", async (event) => {
     )
   }
 
-  debug(event, "Event", event)
+  debug(event, "Event Data:", event.data)
 
   const alertId = Buffer.from(event.data.message.data, "base64").toString()
-  if (!alertId) {
-    debug(event, "❌ Failed to read data from event:", event.data)
-    return
+  const alert = await getAlertById(alertId)
+  if (!alert) {
+    throw new Error(`Couldn't find alert with ID '${alertId}'`)
   }
 
   const userId = event.data.message.attributes
@@ -86,39 +98,52 @@ cloudEvent<PubSubEvent>("priceImpactCalculationRequest", async (event) => {
     return
   }
 
-  debug(event, `Processing alert '${alertId}' for user ${userId}`)
+  debug(event, `Processing alert '${alert.id}' for user ${userId}`)
 
-  const alert = await getAlertById(alertId)
-
-  if (!alert) {
-    throw new Error(`Couldn't find alert with ID ''`)
+  const allPools = []
+  for (const p of getPoolsForCoin(alert.coin)) {
+    debug("POOL", p)
+    const pool = getPool(p.name)
+    allPools.push({
+      name: p.name.toUpperCase(),
+      liquidity: await getPoolLiquidity(pool),
+      link: getPoolLink(pool),
+    })
   }
+  const liquidityAcrossAllPools = allPools.reduce((total, pool) => {
+    total += pool.liquidity
+    return total
+  }, 0)
 
-  debug(
-    event,
-    `⏳ Updating pool share for ${alert.id}, last known pool share: ${alert.lastKnownPoolShareInPercent}%`
-  )
-  const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
-  const currentPoolShareInPercent = await getCoinShareOfPool(alert.coin, pool)
-  await updatePoolShare(alert.id, currentPoolShareInPercent, db)
-  debug(
-    event,
-    `✅ Updated pool share for ${alert.id}: ${currentPoolShareInPercent}%`
+  // filter out insignificant pools with < 5% of total liquidity
+  const largestPools = allPools.filter(
+    (p) => (p.liquidity / liquidityAcrossAllPools) * 100 > 5
   )
 
-  debug(
-    event,
-    `⏳ Calculating sell pressure to depeg ${alert.coin} by querying Curve Router with different swap amounts...`
-  )
-  const poolLiquidity = await getPoolLiquidity(pool)
-  const priceImpactResults = await calculateSellPressureToDepeg(
-    alert.coin,
-    alert.peggedTo,
-    poolLiquidity,
-    event
-  )
-  debug(event, `✅ Calculated sell pressure to depeg for ${alert.coin}`)
-  debug(event, `📡 Sending results to user via telegram msg...`)
-  await sendPriceImpactResults({ alert, priceImpactResults, userId })
-  debug(event, `✅ Sent price impact results to user ${userId}`)
+  let msg = `*Main Curve Pools with ${alert.coin}*\n\n`
+  largestPools
+    .sort((a, b) => b.liquidity - a.liquidity)
+    .forEach((p) => {
+      msg += `*${p.name}*: ${getShorthandNumber(p.liquidity)} Liquidity\n${
+        p.link
+      }\n\n`
+    })
+  await sendChatMsg(msg, userId)
+
+  // const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
+  // await sendChatMsg( `*Largest Curve Pool: ${pool.fullName.toUpperCase()}*\n${poolLink}`, userId)
+  // await printPoolBalances(pool, userId)
+
+  // await updatePoolShare(event, alert, pool)
+
+  // await sendChatMsg( "⌛️ Simulating increasing swap amounts until pool would depeg... (can take up to 2-5 minutes)", userId)
+  // const priceImpactResults = await calculateSellPressureToDepeg(
+  //   alert.coin,
+  //   alert.peggedTo,
+  //   await getPoolLiquidity(pool),
+  //   event
+  // )
+  // await sendPriceImpactResults({ alert, priceImpactResults, userId })
+  await sendChatMsg(`️✅ ${alert.coin} Analysis Complete`, userId)
+  debug(event, `✅ Processed alert '${alert.id}' for user '${userId}'`)
 })

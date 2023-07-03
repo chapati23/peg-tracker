@@ -2,18 +2,14 @@
 /* eslint-disable import/no-unused-modules */
 import * as readline from "readline"
 import { Firestore } from "@google-cloud/firestore"
+import { safeEnvVar } from "utils"
 
-if (typeof process.env["TG_USER_ID"] !== "string") {
-  throw new Error("Missing env var TG_USER_ID")
-}
-
-if (typeof process.env["TG_USERNAME"] !== "string") {
-  throw new Error("Missing env var TG_USERNAME")
-}
+const userId = safeEnvVar("TG_USER_ID")
+const userName = safeEnvVar("TG_USERNAME")
 
 const USER_MOCK = {
-  id: process.env["TG_USER_ID"],
-  username: process.env["TG_USERNAME"],
+  id: userId,
+  username: userName,
   type: "private",
 }
 

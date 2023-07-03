@@ -1,5 +1,5 @@
 {
-  "name": "telegram",
+  "name": "pubsub",
   "version": "1.0.0",
   "license": "UNLICENSED",
   "main": "dist/index.js",
@@ -9,16 +9,17 @@
     "build": "tsc",
     "build:watch": "tsc --watch",
     "clean": "rimraf dist node_modules && rimraf *.tgz || true",
+    "dev": "gcloud beta emulators pubsub start --project=curve-pool-tracker --host-port=0.0.0.0:8085",
+    "kill": "echo 'Killing remaining pubsub emulator processes...'; pgrep -f cloud-pubsub-emulator; pkill -f cloud-pubsub-emulator;",
     "lint": "eslint src --fix --report-unused-disable-directives",
     "pack": "npm pack",
     "scriptlint": "npx scriptlint",
+    "setup": "node dist/setupLocalPubsub.js",
     "test": "echo '❗️ Please add tests soon ❗️'"
   },
   "dependencies": {
-    "chalk": "^5.2.0",
-    "cli-table3": "^0.6.3",
+    "@google-cloud/pubsub": "^3.7.1",
     "debug": "^4.3.4",
-    "table": "^6.8.1",
     "utils": "*"
   },
   "devDependencies": {

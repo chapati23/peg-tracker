@@ -1,31 +1,11 @@
 import { Firestore } from "@google-cloud/firestore"
 import { cloudEvent } from "@google-cloud/functions-framework"
-import {
-  getAlertById,
-  getAlertSubscriptionsByUserId,
-  updatePoolShare,
-} from "alerts"
-import {
-  initCurveApi,
-  findLargestPoolForCoin,
-  getCoinShareOfPool,
-  calculateSellPressureToDepeg,
-  getPoolLiquidity,
-} from "curve"
-import { sendPriceImpactResults } from "telegram"
+import { getAlertSubscriptionsByUserId } from "alerts"
+import { getTopic, isPubSubEvent } from "pubsub"
 import { getAllUsers } from "user"
-import debug from "./utils/debug.js"
-
-const db = new Firestore({ preferRest: true })
-
-if (
-  process.env["TELEGRAM_BOT_TOKEN"] == null ||
-  typeof process.env["TELEGRAM_BOT_TOKEN"] !== "string"
-) {
-  throw new Error(
-    "Missing env var TELEGRAM_BOT_TOKEN. Can't send Telegram messages without a valid bot token."
-  )
-}
+import { safeEnvVar } from "utils"
+import debug from "./debug.js"
+import type { PubSubEvent } from "shared-types"
 
 /****************** COLD START SECTION ******************/
 /* This code can be shared by multiple cloud function
@@ -33,83 +13,69 @@ if (
 /* connections so they can be shared across function
 /* instances which should speed up overall performance.
 /********************************************************/
-await initCurveApi()
+const db = new Firestore({ preferRest: true })
 
 /****************** CLOUD FUNCTION ******************/
-cloudEvent("pegChecker", async (/*cloudEvent*/) => {
+cloudEvent<PubSubEvent>("pegChecker", async (event) => {
+  if (!isPubSubEvent(event.data)) {
+    debug(event, "❌ Cloud event data is not a valid pubsub msg: ", event.data)
+    throw new Error(`Cloud event data is not a valid pubsub msg: ${event.data}`)
+  }
+
+  if (!event.source.includes("cron-trigger")) {
+    debug(
+      event,
+      `❌ Exiting. Received event was not of type 'cron-trigger' but: '${event.source}'`
+    )
+    return
+  }
+
   try {
+    const pubsubTopic = safeEnvVar(
+      `PUBSUB_TOPIC`,
+      "Please define the topic name to publish pubsub messages to"
+    )
+    // 0. Establish pubsub connection
+    const topic = await getTopic(pubsubTopic)
+
     // 1. Get all users
     const users = await getAllUsers(db)
 
     // 2. For every user => get their alerts
     for (const userRef of users) {
-      const user = await userRef.get().then((u) => u.data())
-      debug(`[${userRef.id}] USER:`, user)
-
+      debug(event, `📡 Loading alert subscriptions for user ${userRef.id}`)
       const alertSubscriptions = await getAlertSubscriptionsByUserId(
         userRef.id,
         db
       )
+      debug(event, `✅ Loaded alert subscriptions for user ${userRef.id}`)
 
       if (!alertSubscriptions) {
-        return `No alert subscriptions found for user ${user}`
+        debug(event, `⚠️ No alert subscriptions found for user ${userRef.id}`)
+        return `⚠️ No alert subscriptions found for user ${userRef.id}`
       }
 
-      debug(`[${userRef.id}] Alert Subscriptions:`, alertSubscriptions)
-
-      // 3. Process every alert
+      // 3. For every alert => trigger a price impact calculation background job via PubSub
       for (const sub of alertSubscriptions) {
-        const alert = await getAlertById(sub.alertId, db)
-        if (!alert) throw new Error(`Alert for ${sub.alertId} was null`)
-
-        debug(`[${alert.coin}] Begin check...`)
-        const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
-        const lastKnownPoolShareInPercent = alert.lastKnownPoolShareInPercent
-        const currentPoolShareInPercent = await getCoinShareOfPool(
-          alert.coin,
-          pool
-        )
-
-        // Only trigger alert if coin got closer to depeg since last check (or if we don't have a value for the last known depeg check)
         debug(
-          `[${alert.coin}] Last known pool share: ${lastKnownPoolShareInPercent}%`
+          event,
+          `[${userRef.id}] 📡 Triggering price impact calculation for ${sub.alertId}...`
         )
+        await topic.publishMessage({
+          data: Buffer.from(sub.alertId),
+          attributes: { userId: userRef.id },
+        })
         debug(
-          `[${alert.coin}] Current pool share: ${currentPoolShareInPercent}%`
+          event,
+          `[${userRef.id}] ✅ Triggered price impact calculation for ${sub.alertId}`
         )
-        if (
-          !lastKnownPoolShareInPercent ||
-          parseFloat(currentPoolShareInPercent) <
-            parseFloat(lastKnownPoolShareInPercent)
-        ) {
-          debug(`[${alert.coin}] Trigger alert!`)
-          const totalPoolLiquidity = await getPoolLiquidity(pool)
-          const priceImpactResults = await calculateSellPressureToDepeg(
-            alert.coin,
-            alert.peggedTo,
-            totalPoolLiquidity
-          )
-
-          await sendPriceImpactResults({
-            alert,
-            priceImpactResults,
-            userId: userRef.id,
-          })
-
-          debug(
-            `[${alert.coin}] Update last known pool share of ${alert.coin} in DB`
-          )
-          updatePoolShare(alert.id, currentPoolShareInPercent, db)
-        } else {
-          debug(
-            `[${alert.coin}] No alert triggered because current share of coin has improved since the last check`
-          )
-        }
       }
     }
+    debug(event, "✅ Successfully checked all peg alerts")
+
     return "✅ Successfully checked all peg alerts"
   } catch (error) {
-    debug("[❌ ERROR]", error)
+    debug(event, "❌ UNEXPECTED ERROR", error)
     throw new Error(`❌ Unexpected Error while checking peg alerts ${error}`)
   }
 })

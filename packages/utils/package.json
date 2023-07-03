@@ -1,5 +1,5 @@
 {
-  "name": "telegram",
+  "name": "utils",
   "version": "1.0.0",
   "license": "UNLICENSED",
   "main": "dist/index.js",
@@ -15,11 +15,8 @@
     "test": "echo '❗️ Please add tests soon ❗️'"
   },
   "dependencies": {
-    "chalk": "^5.2.0",
-    "cli-table3": "^0.6.3",
-    "debug": "^4.3.4",
-    "table": "^6.8.1",
-    "utils": "*"
+    "@google-cloud/pubsub": "^3.7.1",
+    "debug": "^4.3.4"
   },
   "devDependencies": {
     "eslint-config-custom": "*",

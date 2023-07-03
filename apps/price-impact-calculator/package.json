@@ -12,7 +12,7 @@
     "build:watch": "tsc --watch",
     "clean": "rimraf dist node_modules && rimraf *.tgz || true",
     "deploy": "../../deploy.sh price-impact-calculator",
-    "dev": "$(gcloud beta emulators pubsub env-init); DEBUG=price-impact-calculator,alerts,curve,telegram DEBUG_COLORS=true npx nodemon --watch dist --watch '../../packages/**/dist/**/*' --exec 'npm start'; unset PUBSUB_EMULATOR_HOST",
+    "dev": "$(gcloud beta emulators pubsub env-init); DEBUG=price-impact-calculator,alerts,curve,pubsub,telegram DEBUG_COLORS=true npx nodemon --watch dist --watch .env --watch apps/price-impact-calculator/package.json --watch '../../packages/**/dist/**/*' --exec 'npm start'; unset PUBSUB_EMULATOR_HOST",
     "gcp:build": "open https://console.cloud.google.com/cloud-build/builds;region=europe-west1?project=curve-pool-tracker",
     "gcp:db": "npm run gcp:firestore",
     "gcp:firestore": "open https://console.cloud.google.com/firestore/databases/-default-",
@@ -25,14 +25,15 @@
     "trigger": "./trigger.sh"
   },
   "dependencies": {
-    "@curvefi/api": "^2.41.2",
     "@google-cloud/firestore": "^6.6.1",
     "@google-cloud/functions-framework": "^3.2.0",
-    "@google-cloud/pubsub": "^3.7.1",
     "alerts": "*",
-    "curve": "*",
+    "curve": "^1.0.2",
     "debug": "^4.3.4",
-    "telegram": "*"
+    "pubsub": "*",
+    "table": "^6.8.1",
+    "telegram": "*",
+    "utils": "*"
   },
   "devDependencies": {
     "eslint-config-custom": "*",

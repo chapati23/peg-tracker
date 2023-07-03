@@ -1,4 +1,5 @@
-import type { PubSubEvent } from "../types.d.ts"
+import debug from "./debug.js"
+import type { PubSubEvent } from "shared-types"
 
 export default function isPubSubEvent(obj: unknown): obj is PubSubEvent {
   if (typeof obj !== "object" || obj === null) {
@@ -10,6 +11,7 @@ export default function isPubSubEvent(obj: unknown): obj is PubSubEvent {
 
   for (const prop of requiredProperties) {
     if (!(prop in obj)) {
+      debug(`Missing ${prop} in `, obj)
       return false
     }
   }
@@ -21,6 +23,7 @@ export default function isPubSubEvent(obj: unknown): obj is PubSubEvent {
       typeof obj.message === "object" &&
       !(prop in obj.message)
     ) {
+      debug(`Missing ${prop} in `, obj.message)
       return false
     }
   }

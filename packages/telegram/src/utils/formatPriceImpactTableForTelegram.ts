@@ -1,4 +1,5 @@
 import { table } from "table"
+import { getShorthandNumber } from "utils"
 import type { Alert, PriceImpact } from "shared-types"
 
 export default function formatPriceImpactTableForTelegram(
@@ -11,7 +12,7 @@ export default function formatPriceImpactTableForTelegram(
     const priceImpactFormatted =
       (row.priceImpact > 1 ? "⚠️" : "") + row.priceImpact.toFixed(2) + "%"
 
-    tableData.push([row.swapAmount.toLocaleString(), priceImpactFormatted])
+    tableData.push([getShorthandNumber(row.swapAmount), priceImpactFormatted])
   })
 
   return `<pre>${table(tableData)}</pre>`

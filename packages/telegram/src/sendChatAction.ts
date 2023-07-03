@@ -1,3 +1,4 @@
+import { safeEnvVar } from "utils"
 import debug from "./utils/debug.js"
 import request from "./utils/request.js"
 import type { TelegramApiResponse } from "shared-types"
@@ -10,12 +11,13 @@ export default async function sendChatAction(
   chatId: string
 ): Promise<Response> {
   debug(`\n🌀 Sending 'typing...' update to Telegram chat: ${chatId}`)
+  const botToken = safeEnvVar("TELEGRAM_BOT_TOKEN")
 
   let response
 
   try {
     response = await request<TelegramApiResponse<Response>>(
-      `https://api.telegram.org/bot${process.env["TELEGRAM_BOT_TOKEN"]}/sendChatAction`,
+      `https://api.telegram.org/bot${botToken}/sendChatAction`,
       {
         chat_id: chatId,
         action,
