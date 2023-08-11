@@ -130,20 +130,28 @@ cloudEvent<PubSubEvent>("priceImpactCalculationRequest", async (event) => {
     })
   await sendChatMsg(msg, userId)
 
-  // const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
-  // await sendChatMsg( `*Largest Curve Pool: ${pool.fullName.toUpperCase()}*\n${poolLink}`, userId)
-  // await printPoolBalances(pool, userId)
+  const pool = await findLargestPoolForCoin(alert.coin, alert.peggedTo)
+  await sendChatMsg(
+    `*Largest Curve Pool: ${pool.fullName.toUpperCase()}*\n${getPoolLink(
+      pool
+    )}`,
+    userId
+  )
+  await printPoolBalances(pool, userId)
 
-  // await updatePoolShare(event, alert, pool)
+  await updatePoolShare(event, alert, pool)
 
-  // await sendChatMsg( "⌛️ Simulating increasing swap amounts until pool would depeg... (can take up to 2-5 minutes)", userId)
-  // const priceImpactResults = await calculateSellPressureToDepeg(
-  //   alert.coin,
-  //   alert.peggedTo,
-  //   await getPoolLiquidity(pool),
-  //   event
-  // )
-  // await sendPriceImpactResults({ alert, priceImpactResults, userId })
+  await sendChatMsg(
+    "⌛️ Simulating increasing swap amounts until pool would depeg... (can take up to 2-5 minutes)",
+    userId
+  )
+  const priceImpactResults = await calculateSellPressureToDepeg(
+    alert.coin,
+    alert.peggedTo,
+    await getPoolLiquidity(pool),
+    event
+  )
+  await sendPriceImpactResults({ alert, priceImpactResults, userId })
   await sendChatMsg(`️✅ ${alert.coin} Analysis Complete`, userId)
   debug(event, `✅ Processed alert '${alert.id}' for user '${userId}'`)
 })

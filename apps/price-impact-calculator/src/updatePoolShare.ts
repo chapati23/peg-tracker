@@ -6,7 +6,7 @@ import type { PoolTemplate } from "@curvefi/api/lib/pools/PoolTemplate.js"
 import type { CloudEvent } from "@google-cloud/functions-framework"
 import type { AlertWithId, PubSubEvent } from "shared-types"
 
-// eslint-disable-next-line import/no-unused-modules
+ 
 export default async function updatePoolShare(
   event: CloudEvent<PubSubEvent>,
   alert: AlertWithId,

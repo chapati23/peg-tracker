@@ -18,7 +18,7 @@ export default async function printPoolBalances(
 
   pool.wrappedCoins.forEach((coin, index) => {
     // Should be safe because 'index' is not user input
-    // eslint-disable-next-line security/detect-object-injection, @typescript-eslint/ban-ts-comment
+    // eslint-disable-next-line security/detect-object-injection
     const _balance = wrappedBalances[index]
     if (!_balance) {
       throw new Error(`Unwrapped balance for ${coin} was undefined`)
