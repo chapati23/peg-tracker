@@ -1,7 +1,7 @@
 {
-  "name": "curve-pool-tracker",
+  "name": "peg-tracker",
   "version": "1.0.0",
-  "description": "Main workspace for curve-pool-tracker monorepo",
+  "description": "Main workspace for peg-tracker monorepo",
   "author": "Philip Paetz <philip.paetz@me.com>",
   "license": "UNLICENSED",
   "volta": {
