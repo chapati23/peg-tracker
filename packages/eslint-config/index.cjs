@@ -1,5 +1,6 @@
 /* eslint-env node */
-/* eslint-disable import/no-unused-modules */
+/* eslint-disable import/no-unused-modules, @typescript-eslint/no-var-requires */
+const isCi = require("is-ci")
 module.exports = {
   env: {
     browser: true,
@@ -25,6 +26,7 @@ module.exports = {
     "no-console": "warn",
     "tsdoc/syntax": "warn",
     "import/no-extraneous-dependencies": "error",
+    "import/no-unresolved": isCi ? "off" : "error",
     "import/no-unused-modules": [
       "error",
       {

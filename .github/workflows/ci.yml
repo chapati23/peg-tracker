@@ -28,9 +28,7 @@ jobs:
         run: npm install
 
       - name: Lint
-        run: |
-          ls -al node_modules
-          npm run lint
+        run: npm run lint
 
       - name: Build
         run: npm run build
