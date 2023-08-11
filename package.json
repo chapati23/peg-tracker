@@ -12,9 +12,9 @@
     "packages/*"
   ],
   "scripts": {
-    "build": "turbo run build",
+    "build": "turbo run build --no-cache --force",
     "createDataModel": "npx ts-node create-data-model.ts",
-    "lint": "turbo run lint",
+    "lint": "turbo run lint --no-cache --force",
     "prepare": "husky install",
     "scriptlint": "npx scriptlint",
     "test": "echo 'Run `turbo test` and optionally filter which package to start via `turbo start --filter bot`'"
