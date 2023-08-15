@@ -24,7 +24,6 @@
     "@google-cloud/firestore": "^6.5.0",
     "@types/debug": "^4.1.8",
     "@types/node": "^20.2.5",
-    "@types/prettier": "^3.0.0",
     "commitlint": "^17.6.5",
     "env-cmd": "^10.1.0",
     "husky": "^8.0.3",
