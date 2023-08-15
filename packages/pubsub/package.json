@@ -18,7 +18,7 @@
     "test": "echo '❗️ Please add tests soon ❗️'"
   },
   "dependencies": {
-    "@google-cloud/pubsub": "^3.7.1",
+    "@google-cloud/pubsub": "^4.0.1",
     "debug": "^4.3.4",
     "utils": "*"
   },

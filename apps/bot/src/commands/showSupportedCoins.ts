@@ -18,7 +18,7 @@ export default async function showSupportedCoins(ctx: CustomContext) {
 
       /* eslint-disable security/detect-object-injection */
       groups[firstLetter] = groups[firstLetter] || []
-      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+       
       groups[firstLetter]!.push(coin)
       /* eslint-enable security/detect-object-injection */
       return groups

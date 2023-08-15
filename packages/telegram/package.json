@@ -15,11 +15,11 @@
     "test": "echo '❗️ Please add tests soon ❗️'"
   },
   "dependencies": {
-    "chalk": "^5.2.0",
+    "chalk": "^5.3.0",
     "cli-table3": "^0.6.3",
     "debug": "^4.3.4",
     "table": "^6.8.1",
-    "utils": "*"
+    "utils": "^1.0.0"
   },
   "devDependencies": {
     "eslint-config-custom": "*",

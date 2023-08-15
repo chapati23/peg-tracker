@@ -27,19 +27,19 @@
   "dependencies": {
     "@google-cloud/firestore": "^6.6.1",
     "@google-cloud/functions-framework": "^3.2.0",
-    "alerts": "*",
+    "alerts": "^1.0.0",
     "curve": "^1.0.2",
     "debug": "^4.3.4",
-    "pubsub": "*",
+    "pubsub": "^1.0.0",
     "table": "^6.8.1",
-    "telegram": "*",
-    "utils": "*"
+    "telegram": "^1.0.0",
+    "utils": "^1.0.0"
   },
   "devDependencies": {
-    "eslint-config-custom": "*",
+    "eslint-config-custom": "^1.0.0",
     "is-ci": "^3.0.1",
     "rimraf": "^5.0.1",
     "shared-types": "*",
-    "tsconfig": "*"
+    "tsconfig": "^1.0.0"
   }
 }

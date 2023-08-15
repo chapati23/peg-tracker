@@ -8,7 +8,7 @@ set -e
 # folder that aren't published and won't be available when Google Cloud builds this function on CI
 #
 # THE SOLUTION
-# We replace all local monorepo dependencies (i.e. { "user": "*"}) with hard file dependencies on
+# We replace all local monorepo dependencies (i.e. { "user": "^1.0.0"}) with hard file dependencies on
 # { "user": "file:/./user-1.0.0.tgz" } by packing all required packages into tarballs and copying
 # them into this folder at deploy time. Now the Cloud Function deployment process has all required
 # files available and will install our local packages directly from the tarballs.
@@ -77,18 +77,18 @@ fi
 
 # Copy all tarballs into this directory
 echo "⏳ Copying tarballs of packages/** dependencies into this folder..."
-for dir in ../../packages/*/; do
-  base_dir=$(basename "$dir")
+for pkg_dir in ../../packages/*/; do
+  pkg=$(basename "$pkg_dir")
 
-  file=$(find "$dir" -name "$base_dir-*.tgz" -print -quit)
+  file=$(find "$pkg_dir" -name "$pkg-*.tgz" -print -quit)
   if [ -n "$file" ]; then
     cp "$file" .
-    version=$(node -p "require('$dir/package.json').version")
-    sed -i '' "s|\"$base_dir\": \"\*\"|\"$base_dir\": \"file:./$base_dir-$version.tgz\"|" package.json
+    version=$(node -p "require('$pkg_dir/package.json').version")
+    sed -i '' "s|\"$pkg\": \"\*\"|\"$pkg\": \"file:./$pkg-$version.tgz\"|" package.json
   fi
 
   if [ $? -ne 0 ]; then
-    echo "❌ Error copying package tarball from $dir"
+    echo "❌ Error copying package tarball from $pkg_dir"
     exit 1
   fi
 done

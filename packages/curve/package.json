@@ -16,7 +16,6 @@
   },
   "dependencies": {
     "@curvefi/api": "^2.36.1",
-    "chalk": "^5.2.0",
     "debug": "^4.3.4",
     "utils": "*"
   },

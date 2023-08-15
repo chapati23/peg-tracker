@@ -31,6 +31,9 @@
     "curve#build": {
       "dependsOn": ["utils#build"]
     },
+    "pubsub#build": {
+      "dependsOn": ["utils#build"]
+    },
     "telegram#build": {
       "dependsOn": ["utils#build"]
     },
